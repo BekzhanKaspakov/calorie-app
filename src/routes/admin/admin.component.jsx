@@ -3,13 +3,15 @@ import {
   getAllFoodEntries,
   getAllUsers,
   addFoodEntry,
+  editFoodEntry,
+  deleteFoodEntry,
 } from "../../utils/firebase/firebase.utils";
 import Entry from "../../components/entry/entry.component";
 import ModalComponent from "../../components/modal/modal.component";
 import { Button } from "react-bootstrap";
 
 const defaultFormFields = {
-  userId: null,
+  userId: "",
   name: "",
   calories: "",
   timestamp: "",
@@ -18,6 +20,7 @@ const defaultFormFields = {
 function Admin() {
   // const [isLoading, setIsLoading] = useState(true);
   const [formFields, setFormFields] = useState(defaultFormFields);
+  const [oldUserId, setOldUserId] = useState("");
   const [foodEntries, setEntries] = useState([]);
   const [users, setUsers] = useState([]);
   // const { currentUser } = useContext(UserContext);
@@ -45,8 +48,28 @@ function Admin() {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
-  const handleCloseEdit = () => setShowEdit(false);
-  const handleShowEdit = () => setShowEdit(true);
+  const handleCloseEdit = () => {
+    setOldUserId("");
+    setShowEdit(false);
+    resetFormFields();
+  };
+
+  const handleShowEdit = (id) => {
+    const food = foodEntries.find((val) => val.id === id);
+    const timestamp = new Date(food.timestamp.seconds * 1000)
+      .toISOString()
+      .slice(0, 16);
+
+    setOldUserId(food.userId);
+    setFormFields({
+      foodId: id,
+      userId: food.userId,
+      name: food.name,
+      calories: food.calories,
+      timestamp: timestamp,
+    });
+    setShowEdit(true);
+  };
 
   const resetFormFields = () => {
     setFormFields(defaultFormFields);
@@ -74,34 +97,40 @@ function Admin() {
       setShow(false);
       resetFormFields();
     } catch (error) {
-      console.log("user sign in failed", error);
+      console.log(error);
     }
   };
 
-  const handleEdit = async (event, entryId, newData) => {
+  const handleEditSubmit = async (event) => {
     event.preventDefault();
+    try {
+      const newEntry = await editFoodEntry(oldUserId, formFields);
+      const newFoodEntries = foodEntries.filter(
+        (val) => val.id !== formFields.foodId
+      );
+      newFoodEntries.push(newEntry);
+      setEntries(newFoodEntries);
 
-    // try {
-    //   const newEntry = await addFoodEntry(currentUser, formFields);
-    //   setEntries([...foodEntries, newEntry]);
-    //   setShow(false);
-    // resetFormFields();
-    // } catch (error) {
-    //   console.log("user sign in failed", error);
-    // }
+      setShowEdit(false);
+      resetFormFields();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const handleDelete = async (event, entryId) => {
+  const handleDelete = async (event, entryData) => {
     event.preventDefault();
-
-    // try {
-    //   const newEntry = await addFoodEntry(currentUser, formFields);
-    //   setEntries([...foodEntries, newEntry]);
-    //   setShow(false);
-    // resetFormFields();
-    // } catch (error) {
-    //   console.log("user sign in failed", error);
-    // }
+    try {
+      await deleteFoodEntry(entryData);
+      const newFoodEntries = foodEntries.filter(
+        (val) => val.id !== entryData.foodId
+      );
+      setEntries(newFoodEntries);
+      setShowEdit(false);
+      resetFormFields();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -136,8 +165,10 @@ function Admin() {
               name={val.name}
               timestamp={val.timestamp}
               calories={val.calories}
-              handleEdit={handleEdit}
+              id={val.id}
+              showEdit={handleShowEdit}
               handleDelete={handleDelete}
+              userId={val.userId}
               user={
                 users.find((user, index) => user.id === val.userId).displayName
               }
@@ -154,16 +185,18 @@ function Admin() {
         handleSubmit={handleSubmit}
         handleSelect={handleSelect}
         users={users}
+        modalTitle="Add new entry"
       ></ModalComponent>
       <ModalComponent
         formFields={formFields}
-        showEdit={showEdit}
+        show={showEdit}
         isAdmin={true}
         handleChange={handleChange}
-        handleClose={handleClose}
-        handleSubmit={handleSubmit}
+        handleClose={handleCloseEdit}
+        handleSubmit={handleEditSubmit}
         handleSelect={handleSelect}
         users={users}
+        modalTitle="Edit entry"
       ></ModalComponent>
     </div>
   );

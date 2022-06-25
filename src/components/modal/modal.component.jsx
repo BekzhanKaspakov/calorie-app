@@ -11,12 +11,13 @@ function ModalComponent({
   handleSelect,
   isAdmin,
   users,
+  modalTitle,
 }) {
   return (
     <Modal show={show} onHide={handleClose}>
       <form onSubmit={handleSubmit}>
         <Modal.Header closeButton>
-          <Modal.Title>Add new entry</Modal.Title>
+          <Modal.Title>{modalTitle}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {isAdmin && (
@@ -26,8 +27,11 @@ function ModalComponent({
                 name="userId"
                 onChange={handleSelect}
                 aria-label="Select User"
+                value={formFields.userId}
               >
-                <option>Select user</option>
+                <option value={""} disabled>
+                  Select user
+                </option>
                 {users.map((val, index) => (
                   <option key={val.id} value={val.id}>
                     {val.displayName}

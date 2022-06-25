@@ -21,6 +21,7 @@ import {
   collectionGroup,
   query,
   Timestamp,
+  deleteDoc,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -124,8 +125,6 @@ export const getFoodEntries = async (userAuth, date) => {
 
 export const addFoodEntry = async (userAuth, newEntry) => {
   const uid = newEntry.userId != null ? newEntry.userId : userAuth.uid;
-  console.log(new Date(newEntry.timestamp));
-  console.log(new Date(newEntry.timestamp).getTime());
   const timestamp =
     newEntry.timestamp != null
       ? Timestamp.fromDate(new Date(newEntry.timestamp))
@@ -139,6 +138,45 @@ export const addFoodEntry = async (userAuth, newEntry) => {
   const docSnap = await getDoc(docRef);
 
   return { id: docSnap.id, userId: docRef.parent.parent.id, ...docSnap.data() };
+};
+
+export const editFoodEntry = async (oldUserId, newEntryData) => {
+  const timestamp =
+    newEntryData.timestamp != null
+      ? Timestamp.fromDate(new Date(newEntryData.timestamp))
+      : serverTimestamp();
+
+  // Check if user owning this entry was changed
+  // If yes delete from old users subcollection, then add to new users subcollection
+  if (oldUserId !== newEntryData.userId) {
+    await deleteDoc(
+      doc(db, "users", oldUserId, "foodEntries", newEntryData.foodId)
+    );
+  }
+  await setDoc(
+    doc(db, "users", newEntryData.userId, "foodEntries", newEntryData.foodId),
+    {
+      name: newEntryData.name,
+      calories: newEntryData.calories,
+      timestamp: timestamp,
+    }
+  );
+
+  return {
+    id: newEntryData.foodId,
+    userId: newEntryData.userId,
+    name: newEntryData.name,
+    calories: newEntryData.calories,
+    timestamp: timestamp,
+  };
+};
+
+export const deleteFoodEntry = async (entryData) => {
+  await deleteDoc(
+    doc(db, "users", entryData.userId, "foodEntries", entryData.foodId)
+  );
+
+  return;
 };
 
 export const getUserDoc = async (userAuth) => {
