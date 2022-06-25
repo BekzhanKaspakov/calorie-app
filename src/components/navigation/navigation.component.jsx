@@ -20,10 +20,21 @@ const Navigation = () => {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
               <Nav.Link href="/journal">Caloric Journal</Nav.Link>
-              {currentUser ? (
-                <Nav.Link onClick={signOutUser}>SIGN OUT</Nav.Link>
+              {!(currentUser && Object.keys(currentUser).length === 0) ? (
+                <Nav.Link
+                  onClick={async () => {
+                    localStorage.removeItem("user");
+                    await signOutUser();
+                    window.location.reload();
+                  }}
+                >
+                  SIGN OUT
+                </Nav.Link>
               ) : (
                 <Nav.Link href="/auth">SIGN IN</Nav.Link>
+              )}
+              {currentUser && currentUser.role === "admin" && (
+                <Nav.Link href="/admin">Admin Page</Nav.Link>
               )}
             </Nav>
           </Navbar.Collapse>

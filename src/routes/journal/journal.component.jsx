@@ -8,35 +8,34 @@ import styles from "./journal.module.scss";
 import { UserContext } from "../../contexts/user.context";
 import { Button, Modal, Placeholder } from "react-bootstrap";
 import FormInput from "../../components/form-input/form-input.component";
-
-const Entry = ({ name, timestamp, calories }) => {
-  const date = new Date(timestamp.seconds * 1000);
-  return (
-    <tr>
-      <td>{name}</td>
-      <td>{date.toLocaleString()}</td>
-      <td>{calories}</td>
-    </tr>
-  );
-};
+import ModalComponent from "../../components/modal/modal.component";
+import Entry from "../../components/entry/entry.component";
 
 const defaultFormFields = {
   name: "",
-  calories: 0,
+  calories: "",
 };
 
 function Journal() {
   // const [isLoading, setIsLoading] = useState(true);
   const [formFields, setFormFields] = useState(defaultFormFields);
   const [foodEntries, setEntries] = useState([]);
-  const { currentUser } = useContext(UserContext);
+  // const { currentUser } = useContext(UserContext);
+  const [currentUser, setCurrentUser] = useState({
+    ...JSON.parse(localStorage.getItem("user")),
+  });
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    console.log(currentUser);
-    getFoodEntries(currentUser, new Date()).then((value) => {
-      setEntries(value);
-    });
+    const fetchData = async () => {
+      try {
+        const response = await getFoodEntries(currentUser, new Date());
+        setEntries(response);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
   }, []);
 
   const handleClose = () => setShow(false);
@@ -59,13 +58,14 @@ function Journal() {
       const newEntry = await addFoodEntry(currentUser, formFields);
       setEntries([...foodEntries, newEntry]);
       setShow(false);
+      resetFormFields();
     } catch (error) {
       console.log("user sign in failed", error);
     }
   };
 
   return (
-    <>
+    <div style={{ margin: "2rem 0" }}>
       <div
         style={{ display: "flex", alignItems: "center", justifyContent: "end" }}
       >
@@ -98,41 +98,15 @@ function Journal() {
           ))}
         </tbody>
       </table>
-      <Modal show={show} onHide={handleClose}>
-        <form onSubmit={handleSubmit}>
-          <Modal.Header closeButton>
-            <Modal.Title>Add new entry</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <FormInput
-              label="Enter Food Name"
-              type="text"
-              required
-              onChange={handleChange}
-              name="name"
-              value={formFields.name}
-            />
-
-            <FormInput
-              label="Enter Calorie Amount"
-              type="number"
-              required
-              onChange={handleChange}
-              name="calories"
-              value={formFields.calories}
-            />
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
-              Close
-            </Button>
-            <Button type="submit" variant="primary" onClick={handleSubmit}>
-              Add
-            </Button>
-          </Modal.Footer>
-        </form>
-      </Modal>
-    </>
+      <ModalComponent
+        formFields={formFields}
+        show={show}
+        isAdmin={false}
+        handleChange={handleChange}
+        handleClose={handleClose}
+        handleSubmit={handleSubmit}
+      ></ModalComponent>
+    </div>
   );
 }
 

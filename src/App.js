@@ -1,14 +1,16 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 
 import "./App.css";
-import { UserContext } from "./contexts/user.context";
 import Navigation from "./components/navigation/navigation.component";
 import Authentication from "./routes/authentication/authentication.component";
 import Journal from "./routes/journal/journal.component";
 import Admin from "./routes/admin/admin.component";
+import usePersistState from "./hooks/usePersistState.hook";
+import { UserContext } from "./contexts/user.context";
 
 function App() {
+  const { currentUser } = useContext(UserContext);
   return (
     <div className="App">
       <Routes>
@@ -16,7 +18,7 @@ function App() {
           <Route
             path="journal"
             element={
-              <RequireAuth>
+              <RequireAuth currentUser={currentUser}>
                 <Journal />
               </RequireAuth>
             }
@@ -24,15 +26,15 @@ function App() {
           <Route
             path="auth"
             element={
-              <NotRequireAuth>
+              <NotRequireAuth currentUser={currentUser}>
                 <Authentication />
               </NotRequireAuth>
             }
           />
           <Route
-            path="auth"
+            path="admin"
             element={
-              <RequireAdminAuth>
+              <RequireAdminAuth currentUser={currentUser}>
                 <Admin />
               </RequireAdminAuth>
             }
@@ -43,44 +45,32 @@ function App() {
   );
 }
 
-function RequireAuth({ children }) {
-  const { currentUser } = useContext(UserContext);
+function RequireAuth({ children, currentUser }) {
   let location = useLocation();
 
-  if (currentUser == null) {
-    // Redirect them to the /login page, but save the current location they were
-    // trying to go to when they were redirected. This allows us to send them
-    // along to that page after they login, which is a nicer user experience
-    // than dropping them off on the home page.
+  if (currentUser == null || Object.keys(currentUser).length === 0) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   return children;
 }
 
-function RequireAdminAuth({ children }) {
-  const { currentUser } = useContext(UserContext);
+function RequireAdminAuth({ children, currentUser }) {
   let location = useLocation();
 
-  if (currentUser == null || currentUser) {
-    // Redirect them to the /login page, but save the current location they were
-    // trying to go to when they were redirected. This allows us to send them
-    // along to that page after they login, which is a nicer user experience
-    // than dropping them off on the home page.
-    return <Navigate to="/" state={{ from: location }} replace />;
+  if (
+    currentUser == null ||
+    Object.keys(currentUser).length === 0 ||
+    currentUser.role !== "admin"
+  ) {
+    return <Navigate to="/journal" state={{ from: location }} replace />;
   }
 
   return children;
 }
 
-function NotRequireAuth({ children }) {
-  const { currentUser } = useContext(UserContext);
-
-  if (currentUser != null) {
-    // Redirect them to the /login page, but save the current location they were
-    // trying to go to when they were redirected. This allows us to send them
-    // along to that page after they login, which is a nicer user experience
-    // than dropping them off on the home page.
+function NotRequireAuth({ children, currentUser }) {
+  if (currentUser != null && Object.keys(currentUser).length > 0) {
     return <Navigate to="/journal" />;
   }
 

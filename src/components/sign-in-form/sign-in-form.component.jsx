@@ -1,9 +1,12 @@
 import { useState } from "react";
 
 import FormInput from "../form-input/form-input.component";
-import Button from "../button/button.component";
+import { Button } from "react-bootstrap";
 
-import { signInAuthUserWithEmailAndPassword } from "../../utils/firebase/firebase.utils";
+import {
+  onAuthStateChangedListener,
+  signInAuthUserWithEmailAndPassword,
+} from "../../utils/firebase/firebase.utils";
 
 import "./sign-in-form.styles.scss";
 import { useNavigate } from "react-router-dom";
@@ -63,9 +66,7 @@ const SignInForm = () => {
           value={password}
         />
         <div className="buttons-container">
-          <Button type="submit" buttonType={undefined}>
-            Sign In
-          </Button>
+          <Button type="submit">Sign In</Button>
         </div>
       </form>
     </div>

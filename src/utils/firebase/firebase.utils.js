@@ -18,15 +18,18 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
+  collectionGroup,
+  query,
+  Timestamp,
 } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBzbBZbOK4iCXaCm8Vh9mIrLKDhvE2NmrY",
-  authDomain: "calorie-app-8ca05.firebaseapp.com",
-  projectId: "calorie-app-8ca05",
-  storageBucket: "calorie-app-8ca05.appspot.com",
-  messagingSenderId: "972354149808",
-  appId: "1:972354149808:web:fd2d01af89a545f23e8a75",
+  apiKey: "AIzaSyCJBG3woL6CYaVPSLlN7a9gBQ8ytliZXiw",
+  authDomain: "calorie-app-3c5f4.firebaseapp.com",
+  projectId: "calorie-app-3c5f4",
+  storageBucket: "calorie-app-3c5f4.appspot.com",
+  messagingSenderId: "434449718238",
+  appId: "1:434449718238:web:b943cab63b25394f119b4f",
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
@@ -91,6 +94,26 @@ export const signOutUser = async () => await signOut(auth);
 export const onAuthStateChangedListener = (callback) =>
   onAuthStateChanged(auth, callback);
 
+export const getAllUsers = async (userAuth, date) => {
+  const usersColRef = collection(db, "users");
+
+  const qSnap = await getDocs(usersColRef);
+
+  return qSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+};
+
+export const getAllFoodEntries = async (userAuth, date) => {
+  const foodEntries = query(collectionGroup(db, "foodEntries"));
+  const querySnapshot = await getDocs(foodEntries);
+
+  const data = querySnapshot.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+    userId: d.ref.parent.parent.id,
+  }));
+
+  return data;
+};
 export const getFoodEntries = async (userAuth, date) => {
   const subColRef = collection(db, "users", userAuth.uid, "foodEntries");
 
@@ -100,23 +123,28 @@ export const getFoodEntries = async (userAuth, date) => {
 };
 
 export const addFoodEntry = async (userAuth, newEntry) => {
-  const docRef = await addDoc(
-    collection(db, "users", userAuth.uid, "foodEntries"),
-    {
-      name: newEntry.name,
-      calories: newEntry.calories,
-      timestamp: serverTimestamp(),
-    }
-  );
+  const uid = newEntry.userId != null ? newEntry.userId : userAuth.uid;
+  console.log(new Date(newEntry.timestamp));
+  console.log(new Date(newEntry.timestamp).getTime());
+  const timestamp =
+    newEntry.timestamp != null
+      ? Timestamp.fromDate(new Date(newEntry.timestamp))
+      : serverTimestamp();
+  const docRef = await addDoc(collection(db, "users", uid, "foodEntries"), {
+    name: newEntry.name,
+    calories: newEntry.calories,
+    timestamp: timestamp,
+  });
+
   const docSnap = await getDoc(docRef);
 
-  return { id: docSnap.id, ...docSnap.data() };
+  return { id: docSnap.id, userId: docRef.parent.parent.id, ...docSnap.data() };
 };
 
-export const getCalorieLimit = async (userAuth) => {
+export const getUserDoc = async (userAuth) => {
   const docRef = doc(db, "users", userAuth.uid);
 
   const docSnap = await getDoc(docRef);
 
-  return docSnap.data().dailyCalorieLimit;
+  return docSnap.data();
 };

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import FormInput from "../form-input/form-input.component";
-import Button from "../button/button.component";
+import { Button } from "react-bootstrap";
 
 import {
   createAuthUserWithEmailAndPassword,
