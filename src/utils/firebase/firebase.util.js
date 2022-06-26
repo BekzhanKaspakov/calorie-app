@@ -186,3 +186,35 @@ export const getUserDoc = async (userAuth) => {
 
   return docSnap.data();
 };
+
+export const inviteFriend = async (formFields) => {
+  const { displayName, email } = formFields;
+  const secondaryFirebaseApp = initializeApp(firebaseConfig, "secondary");
+  const secondaryAuth = getAuth(secondaryFirebaseApp);
+  const password = Math.random().toString(36).slice(-8);
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      secondaryAuth,
+      email,
+      password
+    );
+
+    const userDocRef = doc(db, "users", userCredential.user.uid);
+
+    const userSnapshot = await getDoc(userDocRef);
+
+    const createdAt = new Date();
+    if (!userSnapshot.exists()) {
+      await setDoc(userDocRef, {
+        displayName,
+        email,
+        createdAt,
+        generatedPassword: password,
+        dailyCalorieLimit: 2100,
+      });
+    }
+    return { displayName, email, createdAt, dailyCalorieLimit: 2100 };
+  } catch (error) {
+    console.log("error creating the user", error.message);
+  }
+};

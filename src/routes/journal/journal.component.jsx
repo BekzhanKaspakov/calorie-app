@@ -10,6 +10,7 @@ import { Button, Modal, Placeholder } from "react-bootstrap";
 import FormInput from "../../components/form-input/form-input.component";
 import ModalComponent from "../../components/modal/modal.component";
 import Entry from "../../components/entry/entry.component";
+import InviteComponent from "../../components/invite/invite.component";
 
 const defaultFormFields = {
   name: "",
@@ -17,13 +18,12 @@ const defaultFormFields = {
 };
 
 function Journal() {
-  // const [isLoading, setIsLoading] = useState(true);
   const [formFields, setFormFields] = useState(defaultFormFields);
   const [foodEntries, setEntries] = useState([]);
-  // const { currentUser } = useContext(UserContext);
   const [currentUser, setCurrentUser] = useState({
     ...JSON.parse(localStorage.getItem("user")),
   });
+  const [showInvite, setShowInvite] = useState(false);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -40,6 +40,9 @@ function Journal() {
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
+
+  const handleCloseInvite = () => setShowInvite(false);
+  const handleShowInvite = () => setShowInvite(true);
 
   const resetFormFields = () => {
     setFormFields(defaultFormFields);
@@ -64,11 +67,25 @@ function Journal() {
     }
   };
 
+  const handlePickSuggestion = (food_name, calories) => {
+    setFormFields({ ...formFields, name: food_name, calories: calories });
+  };
+
+  const handleSelect = (event) => {
+    const { name, value } = event.target;
+    setFormFields({ ...formFields, [name]: value });
+  };
+
   return (
     <div style={{ margin: "2rem 0" }}>
       <div
         style={{ display: "flex", alignItems: "center", justifyContent: "end" }}
       >
+        <div style={{ flex: 1 }}>
+          <Button variant="primary" onClick={handleShowInvite}>
+            Invite a friend
+          </Button>
+        </div>
         {currentUser.dailyCalorieLimit && (
           <div style={{ margin: "0 2rem" }}>
             Daily calorie limit: {currentUser.dailyCalorieLimit}
@@ -105,7 +122,16 @@ function Journal() {
         handleChange={handleChange}
         handleClose={handleClose}
         handleSubmit={handleSubmit}
+        handleSelect={handleSelect}
+        handlePickSuggestion={handlePickSuggestion}
+        modalTitle="Add new entry"
       ></ModalComponent>
+      <InviteComponent
+        formFields={formFields}
+        show={showInvite}
+        handleClose={handleCloseInvite}
+        modalTitle="Invite your friend"
+      ></InviteComponent>
     </div>
   );
 }
