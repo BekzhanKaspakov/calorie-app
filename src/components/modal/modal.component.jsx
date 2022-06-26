@@ -1,5 +1,15 @@
 import { Button, Modal, Form } from "react-bootstrap";
-import FormInput from "../../components/form-input/form-input.component";
+import SuggestionsList from "../suggestions-list/suggestions-list.component";
+import { useState, useCallback } from "react";
+import { getSuggestions } from "../../utils/nutritionix/nutritionix.util";
+
+const debounce = (fn, delay) => {
+  let timerId;
+  return (...args) => {
+    clearTimeout(timerId);
+    timerId = setTimeout(() => fn(...args), delay);
+  };
+};
 
 function ModalComponent({
   children,
@@ -9,12 +19,34 @@ function ModalComponent({
   handleClose,
   handleSubmit,
   handleSelect,
+  handlePickSuggestion,
   isAdmin,
   users,
   modalTitle,
 }) {
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [options, setOptions] = useState([]);
+
+  const onKeyDown = (key) => {
+    if (key.keyCode === 13 || key.keyCode === 9) {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSearch = async (query) => {
+    const res = await getSuggestions(query);
+    setShowSuggestions(true);
+    setOptions([...res.branded]);
+  };
+
+  const debouncedHandler = useCallback(debounce(handleSearch, 200), []);
+
   return (
-    <Modal show={show} onHide={handleClose}>
+    <Modal
+      show={show}
+      onHide={handleClose}
+      onClick={() => setShowSuggestions(false)}
+    >
       <form onSubmit={handleSubmit}>
         <Modal.Header closeButton>
           <Modal.Title>{modalTitle}</Modal.Title>
@@ -56,11 +88,53 @@ function ModalComponent({
             <Form.Label>Food/Product name</Form.Label>
             <Form.Control
               type="text"
+              autoComplete="off"
               placeholder="Enter Food Name"
-              onChange={handleChange}
+              onChange={(event) => {
+                handleChange(event);
+                debouncedHandler(event.target.value);
+              }}
+              onKeyDown={onKeyDown}
+              onFocus={(e) => {
+                setShowSuggestions(true);
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
               name="name"
               value={formFields.name}
             />
+            {showSuggestions &&
+              formFields.name &&
+              // <SuggestionsList options={options} />
+              (options.length > 0 ? (
+                <ul className="suggestions">
+                  {options.map((suggestion, index) => {
+                    return (
+                      <li
+                        className="d-flex"
+                        key={index}
+                        onClick={(event) => {
+                          handlePickSuggestion(
+                            suggestion.food_name,
+                            suggestion.nf_calories
+                          );
+                          setShowSuggestions(false);
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>{suggestion.food_name} </div>
+                        <div className="text-primary">
+                          {suggestion.nf_calories} cal
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <div className="no-suggestions">
+                  <em>No suggestions, you're on your own!</em>
+                </div>
+              ))}
             <Form.Text>
               Start typing to see suggested product calories value
             </Form.Text>

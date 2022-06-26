@@ -7,7 +7,7 @@ import { Button } from "react-bootstrap";
 import {
   createAuthUserWithEmailAndPassword,
   createUserDocumentFromAuth,
-} from "../../utils/firebase/firebase.utils";
+} from "../../utils/firebase/firebase.util";
 
 import "./sign-up-form.styles.scss";
 

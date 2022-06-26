@@ -3,7 +3,7 @@ import { Outlet, Link } from "react-router-dom";
 
 import { UserContext } from "../../contexts/user.context";
 
-import { signOutUser } from "../../utils/firebase/firebase.utils";
+import { signOutUser } from "../../utils/firebase/firebase.util";
 import { Navbar, Container, Nav, Button } from "react-bootstrap";
 
 import "./navigation.styles.scss";

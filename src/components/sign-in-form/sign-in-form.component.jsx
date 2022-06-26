@@ -6,7 +6,7 @@ import { Button } from "react-bootstrap";
 import {
   onAuthStateChangedListener,
   signInAuthUserWithEmailAndPassword,
-} from "../../utils/firebase/firebase.utils";
+} from "../../utils/firebase/firebase.util";
 
 import "./sign-in-form.styles.scss";
 import { useNavigate } from "react-router-dom";

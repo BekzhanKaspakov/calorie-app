@@ -3,7 +3,7 @@ import {
   getCalorieLimit,
   getFoodEntries,
   addFoodEntry,
-} from "../../utils/firebase/firebase.utils";
+} from "../../utils/firebase/firebase.util";
 import styles from "./journal.module.scss";
 import { UserContext } from "../../contexts/user.context";
 import { Button, Modal, Placeholder } from "react-bootstrap";
@@ -60,7 +60,7 @@ function Journal() {
       setShow(false);
       resetFormFields();
     } catch (error) {
-      console.log("user sign in failed", error);
+      console.log("error adding food: ", error);
     }
   };
 

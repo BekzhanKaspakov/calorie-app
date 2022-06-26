@@ -147,7 +147,7 @@ export const editFoodEntry = async (oldUserId, newEntryData) => {
       : serverTimestamp();
 
   // Check if user owning this entry was changed
-  // If yes delete from old users subcollection, then add to new users subcollection
+  // If yes delete from old user's subcollection, then add to new users subcollection
   if (oldUserId !== newEntryData.userId) {
     await deleteDoc(
       doc(db, "users", oldUserId, "foodEntries", newEntryData.foodId)

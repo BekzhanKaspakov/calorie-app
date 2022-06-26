@@ -5,7 +5,7 @@ import {
   addFoodEntry,
   editFoodEntry,
   deleteFoodEntry,
-} from "../../utils/firebase/firebase.utils";
+} from "../../utils/firebase/firebase.util";
 import Entry from "../../components/entry/entry.component";
 import ModalComponent from "../../components/modal/modal.component";
 import { Button } from "react-bootstrap";
@@ -37,7 +37,6 @@ function Admin() {
         const users = await getAllUsers();
         setEntries(response);
         setUsers(users);
-        console.log(users, response);
       } catch (err) {
         console.error(err);
       }
@@ -83,8 +82,6 @@ function Admin() {
 
   const handleSelect = (event) => {
     const { name, value } = event.target;
-    console.log(event.target, name, value);
-
     setFormFields({ ...formFields, [name]: value });
   };
 
@@ -97,7 +94,7 @@ function Admin() {
       setShow(false);
       resetFormFields();
     } catch (error) {
-      console.log(error);
+      console.log("error adding food: ", error);
     }
   };
 
@@ -114,7 +111,7 @@ function Admin() {
       setShowEdit(false);
       resetFormFields();
     } catch (error) {
-      console.log(error);
+      console.log("error editing food: ", error);
     }
   };
 
@@ -129,8 +126,12 @@ function Admin() {
       setShowEdit(false);
       resetFormFields();
     } catch (error) {
-      console.log(error);
+      console.log("error deleting food: ", error);
     }
+  };
+
+  const handlePickSuggestion = (food_name, calories) => {
+    setFormFields({ ...formFields, name: food_name, calories: calories });
   };
 
   return (
@@ -184,6 +185,7 @@ function Admin() {
         handleClose={handleClose}
         handleSubmit={handleSubmit}
         handleSelect={handleSelect}
+        handlePickSuggestion={handlePickSuggestion}
         users={users}
         modalTitle="Add new entry"
       ></ModalComponent>
@@ -195,6 +197,7 @@ function Admin() {
         handleClose={handleCloseEdit}
         handleSubmit={handleEditSubmit}
         handleSelect={handleSelect}
+        handlePickSuggestion={handlePickSuggestion}
         users={users}
         modalTitle="Edit entry"
       ></ModalComponent>
