@@ -1,6 +1,6 @@
 import { Button, Modal, Form } from "react-bootstrap";
 import SuggestionsList from "../suggestions-list/suggestions-list.component";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { getSuggestions } from "../../utils/nutritionix/nutritionix.util";
 
 const debounce = (fn, delay) => {
@@ -34,9 +34,11 @@ function ModalComponent({
   };
 
   const handleSearch = async (query) => {
-    const res = await getSuggestions(query);
-    setShowSuggestions(true);
-    setOptions([...res.branded]);
+    if (query && query.length > 0) {
+      const res = await getSuggestions(query);
+      setShowSuggestions(true);
+      setOptions([...res.branded]);
+    }
   };
 
   const debouncedHandler = useCallback(debounce(handleSearch, 200), []);
