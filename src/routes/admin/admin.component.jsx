@@ -156,7 +156,7 @@ function Admin() {
             <th>Food/Product Name</th>
             <th>Date time</th>
             <th>Calorie value</th>
-            <th></th>
+            <th style={{ width: "150px" }}></th>
           </tr>
         </thead>
         <tbody>

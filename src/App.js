@@ -6,6 +6,7 @@ import Navigation from "./components/navigation/navigation.component";
 import Authentication from "./routes/authentication/authentication.component";
 import Journal from "./routes/journal/journal.component";
 import Admin from "./routes/admin/admin.component";
+import AdminReport from "./routes/admin/report.component";
 import usePersistState from "./hooks/usePersistState.hook";
 import { UserContext } from "./contexts/user.context";
 
@@ -36,6 +37,14 @@ function App() {
             element={
               <RequireAdminAuth currentUser={currentUser}>
                 <Admin />
+              </RequireAdminAuth>
+            }
+          />
+          <Route
+            path="admin-report"
+            element={
+              <RequireAdminAuth currentUser={currentUser}>
+                <AdminReport />
               </RequireAdminAuth>
             }
           />

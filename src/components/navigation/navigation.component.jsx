@@ -15,7 +15,7 @@ const Navigation = () => {
     <Fragment>
       <Navbar bg="light" expand="lg">
         <Container>
-          <Navbar.Brand href="#home">Calories App</Navbar.Brand>
+          <Navbar.Brand href="">Calories App</Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
@@ -34,7 +34,10 @@ const Navigation = () => {
                 <Nav.Link href="/auth">SIGN IN</Nav.Link>
               )}
               {currentUser && currentUser.role === "admin" && (
-                <Nav.Link href="/admin">Admin Page</Nav.Link>
+                <>
+                  <Nav.Link href="/admin">Admin Page</Nav.Link>
+                  <Nav.Link href="/admin-report">Admin Report</Nav.Link>
+                </>
               )}
             </Nav>
           </Navbar.Collapse>
