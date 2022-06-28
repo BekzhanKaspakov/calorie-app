@@ -44,7 +44,10 @@ function Admin() {
     fetchData();
   }, []);
 
-  const handleClose = () => setShow(false);
+  const handleClose = () => {
+    setShow(false);
+    resetFormFields();
+  };
   const handleShow = () => setShow(true);
 
   const handleCloseEdit = () => {
@@ -87,6 +90,15 @@ function Admin() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (
+      formFields.name === "" ||
+      formFields.calories === "" ||
+      formFields.timestamp === "" ||
+      formFields.userId === ""
+    ) {
+      alert("One of the fields is empty");
+      return;
+    }
 
     try {
       const newEntry = await addFoodEntry(currentUser, formFields);
@@ -100,12 +112,21 @@ function Admin() {
 
   const handleEditSubmit = async (event) => {
     event.preventDefault();
+    if (
+      formFields.name === "" ||
+      formFields.calories === "" ||
+      formFields.timestamp === "" ||
+      formFields.userId === ""
+    ) {
+      alert("One of the fields is empty");
+      return;
+    }
     try {
       const newEntry = await editFoodEntry(oldUserId, formFields);
       const newFoodEntries = foodEntries.filter(
         (val) => val.id !== formFields.foodId
       );
-      newFoodEntries.push(newEntry);
+      newFoodEntries.unshift(newEntry);
       setEntries(newFoodEntries);
 
       setShowEdit(false);

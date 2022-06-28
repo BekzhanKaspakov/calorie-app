@@ -2,20 +2,7 @@ import { useState, useEffect } from "react";
 import {
   getAllFoodEntries,
   getAllUsers,
-  addFoodEntry,
-  editFoodEntry,
-  deleteFoodEntry,
 } from "../../utils/firebase/firebase.util";
-import Entry from "../../components/entry/entry.component";
-import ModalComponent from "../../components/modal/modal.component";
-import { Button } from "react-bootstrap";
-
-const defaultFormFields = {
-  userId: "",
-  name: "",
-  calories: "",
-  timestamp: "",
-};
 
 function AdminReport() {
   const [foodEntries, setEntries] = useState([]);
@@ -57,7 +44,7 @@ function AdminReport() {
                 entry.timestamp.seconds > new Date().getTime() / 1000 - 604800
             );
             return (
-              <tr>
+              <tr key={user.id}>
                 <td>{user.displayName}</td>
                 <td>{thisWeekEntries.length}</td>
                 <td>

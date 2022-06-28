@@ -41,7 +41,10 @@ const SignUpForm = () => {
         password
       );
 
-      await createUserDocumentFromAuth(user, { displayName });
+      await createUserDocumentFromAuth(user, {
+        displayName,
+        dailyCalorieLimit: 2100,
+      });
       resetFormFields();
       navigate("/journal");
     } catch (error) {

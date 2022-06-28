@@ -69,7 +69,10 @@ function Journal() {
     fetchData();
   }, []);
 
-  const handleClose = () => setShow(false);
+  const handleClose = () => {
+    setShow(false);
+    resetFormFields();
+  };
   const handleShow = () => setShow(true);
 
   const handleCloseInvite = () => setShowInvite(false);
@@ -87,6 +90,10 @@ function Journal() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (formFields.name === "" || formFields.calories === "") {
+      alert("One of the fields is empty");
+      return;
+    }
 
     try {
       const newEntry = await addFoodEntry(currentUser, formFields);

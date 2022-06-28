@@ -6,8 +6,6 @@ import { UserContext } from "../../contexts/user.context";
 import { signOutUser } from "../../utils/firebase/firebase.util";
 import { Navbar, Container, Nav, Button } from "react-bootstrap";
 
-import "./navigation.styles.scss";
-
 const Navigation = () => {
   const { currentUser } = useContext(UserContext);
 
