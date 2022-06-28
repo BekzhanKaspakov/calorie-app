@@ -90,7 +90,7 @@ function Admin() {
 
     try {
       const newEntry = await addFoodEntry(currentUser, formFields);
-      setEntries([...foodEntries, newEntry]);
+      setEntries([newEntry, ...foodEntries]);
       setShow(false);
       resetFormFields();
     } catch (error) {

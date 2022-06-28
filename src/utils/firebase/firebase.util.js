@@ -22,6 +22,7 @@ import {
   query,
   Timestamp,
   deleteDoc,
+  orderBy,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -104,7 +105,10 @@ export const getAllUsers = async (userAuth, date) => {
 };
 
 export const getAllFoodEntries = async (userAuth, date) => {
-  const foodEntries = query(collectionGroup(db, "foodEntries"));
+  const foodEntries = query(
+    collectionGroup(db, "foodEntries"),
+    orderBy("timestamp", "desc")
+  );
   const querySnapshot = await getDocs(foodEntries);
 
   const data = querySnapshot.docs.map((d) => ({
@@ -118,7 +122,7 @@ export const getAllFoodEntries = async (userAuth, date) => {
 export const getFoodEntries = async (userAuth, date) => {
   const subColRef = collection(db, "users", userAuth.uid, "foodEntries");
 
-  const qSnap = await getDocs(subColRef);
+  const qSnap = await getDocs(query(subColRef, orderBy("timestamp", "desc")));
 
   return qSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 };

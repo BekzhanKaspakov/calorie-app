@@ -1,11 +1,8 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import {
-  getCalorieLimit,
   getFoodEntries,
   addFoodEntry,
 } from "../../utils/firebase/firebase.util";
-import styles from "./journal.module.scss";
-import { UserContext } from "../../contexts/user.context";
 import { Button } from "react-bootstrap";
 import ModalComponent from "../../components/modal/modal.component";
 import Entry from "../../components/entry/entry.component";
@@ -93,8 +90,8 @@ function Journal() {
 
     try {
       const newEntry = await addFoodEntry(currentUser, formFields);
-      setEntries([...foodEntries, newEntry]);
-      setDates(makeDates([...foodEntries, newEntry]));
+      setEntries([newEntry, ...foodEntries]);
+      setDates(makeDates([newEntry, ...foodEntries]));
       setShow(false);
       resetFormFields();
     } catch (error) {
