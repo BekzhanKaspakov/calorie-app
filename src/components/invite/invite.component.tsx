@@ -2,14 +2,31 @@ import { Button, Modal, Form } from "react-bootstrap";
 import { useState } from "react";
 import { inviteFriend } from "../../utils/firebase/firebase.util";
 
-const defaultFormFields = {
-  displayName: "",
-  email: "",
+export type InviteFriendFormFields = {
+  displayName: string;
+  email: string;
+  calories: number;
 };
 
-function InviteComponent({ children, show, handleClose, modalTitle }) {
+const defaultFormFields: InviteFriendFormFields = {
+  displayName: "",
+  email: "",
+  calories: 0,
+};
+
+type InviteComponentProps = {
+  show: boolean;
+  handleClose: () => void;
+  modalTitle: string;
+};
+
+function InviteComponent({
+  show,
+  handleClose,
+  modalTitle,
+}: InviteComponentProps) {
   const [formFields, setFormFields] = useState(defaultFormFields);
-  const handleChange = (event) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormFields({ ...formFields, [name]: value });
   };
@@ -18,7 +35,7 @@ function InviteComponent({ children, show, handleClose, modalTitle }) {
     setFormFields(defaultFormFields);
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     try {
@@ -63,7 +80,7 @@ function InviteComponent({ children, show, handleClose, modalTitle }) {
           <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
-          <Button type="submit" variant="primary" onClick={handleSubmit}>
+          <Button type="submit" variant="primary">
             Add
           </Button>
         </Modal.Footer>

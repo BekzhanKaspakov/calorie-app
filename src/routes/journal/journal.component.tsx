@@ -5,28 +5,39 @@ import {
 } from "../../utils/firebase/firebase.util";
 import { Button } from "react-bootstrap";
 import ModalComponent from "../../components/modal/modal.component";
-import Entry from "../../components/entry/entry.component";
+import Entry, { FoodEntry } from "../../components/entry/entry.component";
 import InviteComponent from "../../components/invite/invite.component";
+
+export type FormFields = {
+  name: string;
+  calories: number;
+};
 
 const defaultFormFields = {
   name: "",
   calories: "",
 };
 
-function makeDates(input) {
-  let dates = input.filter(onlyUnique).map((val, index) => {
+function makeDates(foodEntries: FoodEntry[]) {
+  let dates = foodEntries.filter(onlyUnique).map((val, index) => {
     return new Date(val.timestamp.seconds * 1000).setHours(0, 0, 0, 0);
   });
-  dates = [...new Set(dates)].map((val, index) => {
+  const datesSet = [...new Set(dates)];
+  const timestamps = datesSet.map((val, index) => {
     return { timestamp: val };
   });
-  for (let i = 0; i < dates.length; i++) {
-    const date = dates[i];
-    date["calories"] = input
-      .filter((val, index) => compareDates(val.timestamp, date.timestamp))
-      .reduce((prev, curr) => {
-        return prev + Number(curr.calories);
-      }, 0);
+  const timestampsWithCalories: { timestamp: number; calories: number }[] = [];
+  for (let i = 0; i < timestamps.length; i++) {
+    timestampsWithCalories.push({
+      calories: foodEntries
+        .filter((val, index) =>
+          compareDates(val.timestamp, timestamps[i].timestamp)
+        )
+        .reduce((prev, curr) => {
+          return prev + Number(curr.calories);
+        }, 0),
+      timestamp: timestamps[i].timestamp,
+    });
   }
   dates = Array.from(dates);
   return dates;

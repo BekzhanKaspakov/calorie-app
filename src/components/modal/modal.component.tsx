@@ -1,18 +1,32 @@
 import { Button, Modal, Form } from "react-bootstrap";
-import SuggestionsList from "../suggestions-list/suggestions-list.component";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { getSuggestions } from "../../utils/nutritionix/nutritionix.util";
 
-const debounce = (fn, delay) => {
-  let timerId;
+function debounce<Params extends any[]>(
+  fn: (...args: Params) => any,
+  timeout: number
+): (...args: Params) => void {
+  let timerId: NodeJS.Timeout;
   return (...args) => {
     clearTimeout(timerId);
-    timerId = setTimeout(() => fn(...args), delay);
+    timerId = setTimeout(() => fn(...args), timeout);
   };
+}
+
+type ModalProps = {
+  formFields: AdminFormFields | FormFields;
+  show: boolean;
+  handleChange: () => void;
+  handleClose: () => void;
+  handleSubmit: 
+  handleSelect: 
+  handlePickSuggestion: 
+  isAdmin: 
+  users: 
+  modalTitle: 
 };
 
 function ModalComponent({
-  children,
   formFields,
   show,
   handleChange,

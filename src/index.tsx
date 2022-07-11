@@ -7,7 +7,10 @@ import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
 import { UserProvider } from "./contexts/user.context";
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const el = document.getElementById("root");
+if (el === null) throw new Error("Root container missing in index.html");
+
+const root = ReactDOM.createRoot(el);
 root.render(
   <React.StrictMode>
     <UserProvider>

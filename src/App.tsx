@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 
 import "./App.css";
 import Navigation from "./components/navigation/navigation.component";
@@ -7,8 +7,8 @@ import Authentication from "./routes/authentication/authentication.component";
 import Journal from "./routes/journal/journal.component";
 import Admin from "./routes/admin/admin.component";
 import AdminReport from "./routes/admin/report.component";
-import usePersistState from "./hooks/usePersistState.hook";
 import { UserContext } from "./contexts/user.context";
+import { UserData } from "./contexts/user.context";
 
 function App() {
   const { currentUser } = useContext(UserContext);
@@ -54,7 +54,12 @@ function App() {
   );
 }
 
-function RequireAuth({ children, currentUser }) {
+type AuthProps = {
+  children: JSX.Element;
+  currentUser: UserData;
+};
+
+function RequireAuth({ children, currentUser }: AuthProps) {
   let location = useLocation();
 
   if (currentUser == null || Object.keys(currentUser).length === 0) {
@@ -64,7 +69,7 @@ function RequireAuth({ children, currentUser }) {
   return children;
 }
 
-function RequireAdminAuth({ children, currentUser }) {
+function RequireAdminAuth({ children, currentUser }: AuthProps) {
   let location = useLocation();
 
   if (
@@ -78,7 +83,7 @@ function RequireAdminAuth({ children, currentUser }) {
   return children;
 }
 
-function NotRequireAuth({ children, currentUser }) {
+function NotRequireAuth({ children, currentUser }: AuthProps) {
   if (currentUser != null && Object.keys(currentUser).length > 0) {
     return <Navigate to="/journal" />;
   }

@@ -8,6 +8,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  Auth,
+  User,
+  NextOrObserver,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -23,7 +26,11 @@ import {
   Timestamp,
   deleteDoc,
   orderBy,
+  DocumentData,
 } from "firebase/firestore";
+import { FoodEntry } from "../../components/entry/entry.component";
+import { InviteFriendFormFields } from "../../components/invite/invite.component";
+import { UserData } from "../../contexts/user.context";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJBG3woL6CYaVPSLlN7a9gBQ8ytliZXiw",
@@ -42,6 +49,11 @@ googleProvider.setCustomParameters({
   prompt: "select_account",
 });
 
+export type FormFieldFoodEntry = FoodEntry & {
+  datePickerTimestamp?: string;
+  userId?: string;
+};
+
 export const auth = getAuth();
 export const signInWithGooglePopup = () =>
   signInWithPopup(auth, googleProvider);
@@ -51,7 +63,7 @@ export const signInWithGoogleRedirect = () =>
 export const db = getFirestore();
 
 export const createUserDocumentFromAuth = async (
-  userAuth,
+  userAuth: User,
   additionalInformation = { dailyCalorieLimit: 2100 }
 ) => {
   if (!userAuth) return;
@@ -71,7 +83,7 @@ export const createUserDocumentFromAuth = async (
         createdAt,
         ...additionalInformation,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.log("error creating the user", error.message);
     }
   }
@@ -79,13 +91,19 @@ export const createUserDocumentFromAuth = async (
   return userDocRef;
 };
 
-export const createAuthUserWithEmailAndPassword = async (email, password) => {
+export const createAuthUserWithEmailAndPassword = async (
+  email: string,
+  password: string
+) => {
   if (!email || !password) return;
 
   return await createUserWithEmailAndPassword(auth, email, password);
 };
 
-export const signInAuthUserWithEmailAndPassword = async (email, password) => {
+export const signInAuthUserWithEmailAndPassword = async (
+  email: string,
+  password: string
+) => {
   if (!email || !password) return;
 
   return await signInWithEmailAndPassword(auth, email, password);
@@ -93,10 +111,10 @@ export const signInAuthUserWithEmailAndPassword = async (email, password) => {
 
 export const signOutUser = async () => await signOut(auth);
 
-export const onAuthStateChangedListener = (callback) =>
+export const onAuthStateChangedListener = (callback: any) =>
   onAuthStateChanged(auth, callback);
 
-export const getAllUsers = async (userAuth, date) => {
+export const getAllUsers = async () => {
   const usersColRef = collection(db, "users");
 
   const qSnap = await getDocs(usersColRef);
@@ -104,14 +122,14 @@ export const getAllUsers = async (userAuth, date) => {
   return qSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 };
 
-export const getAllFoodEntries = async (userAuth, date) => {
+export const getAllFoodEntries = async () => {
   const foodEntries = query(
     collectionGroup(db, "foodEntries"),
     orderBy("timestamp", "desc")
   );
   const querySnapshot = await getDocs(foodEntries);
 
-  const data = querySnapshot.docs.map((d) => ({
+  const data = querySnapshot.docs.map((d: DocumentData) => ({
     id: d.id,
     ...d.data(),
     userId: d.ref.parent.parent.id,
@@ -119,7 +137,7 @@ export const getAllFoodEntries = async (userAuth, date) => {
 
   return data;
 };
-export const getFoodEntries = async (userAuth, date) => {
+export const getFoodEntries = async (userAuth: User) => {
   const subColRef = collection(db, "users", userAuth.uid, "foodEntries");
 
   const qSnap = await getDocs(query(subColRef, orderBy("timestamp", "desc")));
@@ -127,11 +145,14 @@ export const getFoodEntries = async (userAuth, date) => {
   return qSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 };
 
-export const addFoodEntry = async (userAuth, newEntry) => {
+export const addFoodEntry = async (
+  userAuth: User,
+  newEntry: FormFieldFoodEntry
+) => {
   const uid = newEntry.userId != null ? newEntry.userId : userAuth.uid;
   const timestamp =
-    newEntry.timestamp != null
-      ? Timestamp.fromDate(new Date(newEntry.timestamp))
+    newEntry.datePickerTimestamp != null
+      ? Timestamp.fromDate(new Date(newEntry.datePickerTimestamp))
       : serverTimestamp();
   const docRef = await addDoc(collection(db, "users", uid, "foodEntries"), {
     name: newEntry.name,
@@ -141,24 +162,35 @@ export const addFoodEntry = async (userAuth, newEntry) => {
 
   const docSnap = await getDoc(docRef);
 
-  return { id: docSnap.id, userId: docRef.parent.parent.id, ...docSnap.data() };
+  return {
+    id: docSnap.id,
+    userId: docRef.parent!.parent!.id,
+    ...docSnap.data(),
+  };
 };
 
-export const editFoodEntry = async (oldUserId, newEntryData) => {
+export const editFoodEntry = async (
+  oldUserId: string,
+  newEntryData: FormFieldFoodEntry
+) => {
+  if (newEntryData.id == null || newEntryData.userId == null) {
+    console.log("EditFoodEntry: Missing id or userId");
+    return;
+  }
   const timestamp =
-    newEntryData.timestamp != null
-      ? Timestamp.fromDate(new Date(newEntryData.timestamp))
+    newEntryData.datePickerTimestamp != null
+      ? Timestamp.fromDate(new Date(newEntryData.datePickerTimestamp))
       : serverTimestamp();
 
   // Check if user owning this entry was changed
   // If yes delete from old user's subcollection, then add to new users subcollection
-  if (oldUserId !== newEntryData.userId) {
+  if (newEntryData.id != null && oldUserId !== newEntryData.userId) {
     await deleteDoc(
-      doc(db, "users", oldUserId, "foodEntries", newEntryData.foodId)
+      doc(db, "users", oldUserId, "foodEntries", newEntryData.id)
     );
   }
   await setDoc(
-    doc(db, "users", newEntryData.userId, "foodEntries", newEntryData.foodId),
+    doc(db, "users", newEntryData.userId, "foodEntries", newEntryData.id),
     {
       name: newEntryData.name,
       calories: newEntryData.calories,
@@ -167,7 +199,7 @@ export const editFoodEntry = async (oldUserId, newEntryData) => {
   );
 
   return {
-    id: newEntryData.foodId,
+    id: newEntryData.id,
     userId: newEntryData.userId,
     name: newEntryData.name,
     calories: newEntryData.calories,
@@ -175,15 +207,19 @@ export const editFoodEntry = async (oldUserId, newEntryData) => {
   };
 };
 
-export const deleteFoodEntry = async (entryData) => {
+export const deleteFoodEntry = async (entryData: FormFieldFoodEntry) => {
+  if (entryData.id == null || entryData.userId == null) {
+    console.log("DeleteFoodEntry: Missing id or userId");
+    return;
+  }
   await deleteDoc(
-    doc(db, "users", entryData.userId, "foodEntries", entryData.foodId)
+    doc(db, "users", entryData.userId, "foodEntries", entryData.id)
   );
 
   return;
 };
 
-export const getUserDoc = async (userAuth) => {
+export const getUserDoc = async (userAuth: UserData) => {
   const docRef = doc(db, "users", userAuth.uid);
 
   const docSnap = await getDoc(docRef);
@@ -191,7 +227,7 @@ export const getUserDoc = async (userAuth) => {
   return docSnap.data();
 };
 
-export const inviteFriend = async (formFields) => {
+export const inviteFriend = async (formFields: InviteFriendFormFields) => {
   const { displayName, email } = formFields;
   const secondaryFirebaseApp = initializeApp(firebaseConfig, "secondary");
   const secondaryAuth = getAuth(secondaryFirebaseApp);
@@ -218,7 +254,7 @@ export const inviteFriend = async (formFields) => {
       });
     }
     return { displayName, email, createdAt, dailyCalorieLimit: 2100 };
-  } catch (error) {
+  } catch (error: any) {
     console.log("error creating the user", error.message);
   }
 };
