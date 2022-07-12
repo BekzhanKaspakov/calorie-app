@@ -15,20 +15,19 @@ export type Suggestion = {
 };
 
 type PostSuggestionsResponse = {
-  data: Suggestion[];
+  data: { branded: Suggestion[] };
 };
 
 export const getSuggestions = async (reqString: string) => {
   const body = { query: reqString };
   let resp;
-  await axios
-    .post<PostSuggestionsResponse>("/search/instant", body, {
+  try {
+    resp = await axios.post<PostSuggestionsResponse>("/search/instant", body, {
       baseURL: API_DOMAIN,
       headers: headers,
-    })
-    .then((response) => {
-      resp = response.data;
-    })
-    .catch((error) => console.log("get error", error));
-  return resp;
+    });
+  } catch (error: any) {
+    console.log(error);
+  }
+  return resp?.data.data.branded;
 };

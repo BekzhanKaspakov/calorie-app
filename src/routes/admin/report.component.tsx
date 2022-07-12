@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
+import { UserDoc } from "../../contexts/user.context";
 import {
   getAllFoodEntries,
   getAllUsers,
 } from "../../utils/firebase/firebase.util";
+import { AdminFoodEntry } from "./admin.component";
 
 function AdminReport() {
-  const [foodEntries, setEntries] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [foodEntries, setEntries] = useState<AdminFoodEntry[]>([]);
+  const [users, setUsers] = useState<UserDoc[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,6 +45,7 @@ function AdminReport() {
               (entry) =>
                 entry.timestamp.seconds > new Date().getTime() / 1000 - 604800
             );
+            console.log(thisWeekEntries);
             return (
               <tr key={user.id}>
                 <td>{user.displayName}</td>
@@ -61,12 +64,14 @@ function AdminReport() {
                   }
                 </td>
                 <td>
-                  {Math.floor(
-                    thisWeekEntries.reduce(
-                      (prev, curr) => prev + Number(curr.calories),
-                      0
-                    ) / thisWeekEntries.length
-                  )}
+                  {thisWeekEntries.length
+                    ? Math.floor(
+                        thisWeekEntries.reduce(
+                          (prev, curr) => prev + Number(curr.calories),
+                          0
+                        ) / thisWeekEntries.length
+                      )
+                    : 0}
                 </td>
               </tr>
             );

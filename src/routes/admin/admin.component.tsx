@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import {
   getAllFoodEntries,
   getAllUsers,
@@ -6,26 +6,46 @@ import {
   editFoodEntry,
   deleteFoodEntry,
 } from "../../utils/firebase/firebase.util";
-import Entry from "../../components/entry/entry.component";
+import Entry, { FoodEntry } from "../../components/entry/entry.component";
 import ModalComponent from "../../components/modal/modal.component";
 import { Button } from "react-bootstrap";
+import { UserData, UserDoc } from "../../contexts/user.context";
+import { Timestamp } from "firebase/firestore";
+import { FormFields } from "../journal/journal.component";
 
-const defaultFormFields = {
+export type AdminFoodEntry = FoodEntry & {
+  userId: string;
+};
+
+export function isTypeAdminFoodEntry(
+  formFields: AdminFoodEntry | FoodEntry
+): formFields is AdminFoodEntry {
+  return (formFields as AdminFoodEntry).userId !== undefined;
+}
+
+export type AdminFormFields = FormFields & {
+  datePickerTimestamp?: string;
+  userId?: string;
+  id: string;
+};
+
+const defaultFormFields: AdminFormFields = {
   userId: "",
   name: "",
-  calories: "",
-  timestamp: "",
+  calories: 0,
+  datePickerTimestamp: "",
+  id: "",
 };
 
 function Admin() {
   // const [isLoading, setIsLoading] = useState(true);
   const [formFields, setFormFields] = useState(defaultFormFields);
   const [oldUserId, setOldUserId] = useState("");
-  const [foodEntries, setEntries] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [foodEntries, setEntries] = useState<AdminFoodEntry[]>([]);
+  const [users, setUsers] = useState<UserDoc[]>([]);
   // const { currentUser } = useContext(UserContext);
-  const [currentUser, setCurrentUser] = useState({
-    ...JSON.parse(localStorage.getItem("user")),
+  const [currentUser, setCurrentUser] = useState<UserData>({
+    ...JSON.parse(localStorage.getItem("user") || "{}"),
   });
   const [show, setShow] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -34,7 +54,7 @@ function Admin() {
     const fetchData = async () => {
       try {
         const response = await getAllFoodEntries();
-        const users = await getAllUsers();
+        const users: UserDoc[] = await getAllUsers();
         setEntries(response);
         setUsers(users);
       } catch (err) {
@@ -56,19 +76,23 @@ function Admin() {
     resetFormFields();
   };
 
-  const handleShowEdit = (id) => {
+  const handleShowEdit = (id: string) => {
     const food = foodEntries.find((val) => val.id === id);
+    if (food == null) {
+      console.log("Something wrong at find handleShowEdit");
+      return;
+    }
     const timestamp = new Date(food.timestamp.seconds * 1000)
       .toISOString()
       .slice(0, 16);
 
     setOldUserId(food.userId);
     setFormFields({
-      foodId: id,
+      id: id,
       userId: food.userId,
       name: food.name,
       calories: food.calories,
-      timestamp: timestamp,
+      datePickerTimestamp: timestamp,
     });
     setShowEdit(true);
   };
@@ -77,23 +101,23 @@ function Admin() {
     setFormFields(defaultFormFields);
   };
 
-  const handleChange = (event) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
 
     setFormFields({ ...formFields, [name]: value });
   };
 
-  const handleSelect = (event) => {
+  const handleSelect = (event: ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = event.target;
     setFormFields({ ...formFields, [name]: value });
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (
       formFields.name === "" ||
-      formFields.calories === "" ||
-      formFields.timestamp === "" ||
+      formFields.calories === 0 ||
+      formFields.datePickerTimestamp === "" ||
       formFields.userId === ""
     ) {
       alert("One of the fields is empty");
@@ -102,7 +126,11 @@ function Admin() {
 
     try {
       const newEntry = await addFoodEntry(currentUser, formFields);
-      setEntries([newEntry, ...foodEntries]);
+      if (newEntry != null && isTypeAdminFoodEntry(newEntry)) {
+        setEntries([newEntry, ...foodEntries]);
+      } else {
+        console.log("Something went wrong adding new food entry");
+      }
       setShow(false);
       resetFormFields();
     } catch (error) {
@@ -110,24 +138,33 @@ function Admin() {
     }
   };
 
-  const handleEditSubmit = async (event) => {
+  const handleEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (
       formFields.name === "" ||
-      formFields.calories === "" ||
-      formFields.timestamp === "" ||
+      formFields.calories === 0 ||
+      formFields.datePickerTimestamp === "" ||
       formFields.userId === ""
     ) {
       alert("One of the fields is empty");
       return;
     }
     try {
-      const newEntry = await editFoodEntry(oldUserId, formFields);
+      const newEntry = (await editFoodEntry(
+        oldUserId,
+        formFields
+      )) as AdminFoodEntry;
       const newFoodEntries = foodEntries.filter(
-        (val) => val.id !== formFields.foodId
+        (val) => val.id !== formFields.id
       );
-      newFoodEntries.unshift(newEntry);
-      setEntries(newFoodEntries);
+      if (newEntry != null) {
+        newFoodEntries.unshift(newEntry);
+        setEntries(newFoodEntries);
+      } else {
+        console.log(
+          "Something went wrong submitting edited entry: HandleEditSubmit"
+        );
+      }
 
       setShowEdit(false);
       resetFormFields();
@@ -136,12 +173,15 @@ function Admin() {
     }
   };
 
-  const handleDelete = async (event, entryData) => {
+  const handleDelete = async (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    entryData: FoodEntry
+  ) => {
     event.preventDefault();
     try {
       await deleteFoodEntry(entryData);
       const newFoodEntries = foodEntries.filter(
-        (val) => val.id !== entryData.foodId
+        (val) => val.id !== entryData.id
       );
       setEntries(newFoodEntries);
       setShowEdit(false);
@@ -151,7 +191,7 @@ function Admin() {
     }
   };
 
-  const handlePickSuggestion = (food_name, calories) => {
+  const handlePickSuggestion = (food_name: string, calories: number) => {
     setFormFields({ ...formFields, name: food_name, calories: calories });
   };
 
@@ -184,15 +224,12 @@ function Admin() {
           {foodEntries.map((val, index) => (
             <Entry
               key={val.id}
-              name={val.name}
-              timestamp={val.timestamp}
-              calories={val.calories}
-              id={val.id}
+              entry={val}
               showEdit={handleShowEdit}
               handleDelete={handleDelete}
-              userId={val.userId}
-              user={
-                users.find((user, index) => user.id === val.userId).displayName
+              userDisplayName={
+                users.find((user, index) => user.id === val.userId)
+                  ?.displayName || ""
               }
             />
           ))}

@@ -1,4 +1,6 @@
-const SuggestionsList = (options) => {
+import { Suggestion } from "../../utils/nutritionix/nutritionix.util";
+
+const SuggestionsList = (options: Suggestion[]) => {
   return (
     <>
       {options.length > 0 ? (

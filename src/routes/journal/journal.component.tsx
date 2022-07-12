@@ -7,19 +7,34 @@ import { Button } from "react-bootstrap";
 import ModalComponent from "../../components/modal/modal.component";
 import Entry, { FoodEntry } from "../../components/entry/entry.component";
 import InviteComponent from "../../components/invite/invite.component";
+import { Timestamp } from "firebase/firestore";
+import { UserData } from "../../contexts/user.context";
 
 export type FormFields = {
   name: string;
   calories: number;
 };
 
-const defaultFormFields = {
-  name: "",
-  calories: "",
+type DailyCalories = {
+  calories: number;
+  timestamp: number;
 };
 
+const defaultFormFields: FormFields = {
+  name: "",
+  calories: 0,
+};
+
+function onlyUniqueFoodEntries(
+  value: FoodEntry,
+  index: number,
+  self: FoodEntry[]
+) {
+  return self.indexOf(value) === index;
+}
+
 function makeDates(foodEntries: FoodEntry[]) {
-  let dates = foodEntries.filter(onlyUnique).map((val, index) => {
+  let dates = foodEntries.filter(onlyUniqueFoodEntries).map((val, index) => {
     return new Date(val.timestamp.seconds * 1000).setHours(0, 0, 0, 0);
   });
   const datesSet = [...new Set(dates)];
@@ -39,11 +54,10 @@ function makeDates(foodEntries: FoodEntry[]) {
       timestamp: timestamps[i].timestamp,
     });
   }
-  dates = Array.from(dates);
-  return dates;
+  return Array.from(timestampsWithCalories);
 }
 
-function compareDates(d1, d2) {
+function compareDates(d1: Timestamp, d2: string | number | Date) {
   const date1 = new Date(d1.seconds * 1000);
   const date2 = new Date(d2);
   return (
@@ -52,16 +66,13 @@ function compareDates(d1, d2) {
     date1.getFullYear() === date2.getFullYear()
   );
 }
-function onlyUnique(value, index, self) {
-  return self.indexOf(value) === index;
-}
 
 function Journal() {
   const [formFields, setFormFields] = useState(defaultFormFields);
-  const [foodEntries, setEntries] = useState([]);
-  const [dates, setDates] = useState([]);
-  const [currentUser, setCurrentUser] = useState({
-    ...JSON.parse(localStorage.getItem("user")),
+  const [foodEntries, setEntries] = useState<FoodEntry[]>([]);
+  const [dates, setDates] = useState<DailyCalories[]>([]);
+  const [currentUser, setCurrentUser] = useState<UserData>({
+    ...JSON.parse(localStorage.getItem("user") || "{}"),
   });
   const [showInvite, setShowInvite] = useState(false);
   const [show, setShow] = useState(false);
@@ -69,7 +80,7 @@ function Journal() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await getFoodEntries(currentUser, new Date());
+        const response = await getFoodEntries(currentUser);
 
         setDates(makeDates(response));
         setEntries(response);
@@ -93,21 +104,24 @@ function Journal() {
     setFormFields(defaultFormFields);
   };
 
-  const handleChange = (event) => {
+  const handleChange = (event: { target: { name: any; value: any } }) => {
     const { name, value } = event.target;
 
     setFormFields({ ...formFields, [name]: value });
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: { preventDefault: () => void }) => {
     event.preventDefault();
-    if (formFields.name === "" || formFields.calories === "") {
+    if (formFields.name === "" || formFields.calories === 0) {
       alert("One of the fields is empty");
       return;
     }
 
     try {
-      const newEntry = await addFoodEntry(currentUser, formFields);
+      const newEntry = (await addFoodEntry(
+        currentUser,
+        formFields
+      )) as FoodEntry;
       setEntries([newEntry, ...foodEntries]);
       setDates(makeDates([newEntry, ...foodEntries]));
       setShow(false);
@@ -117,11 +131,11 @@ function Journal() {
     }
   };
 
-  const handlePickSuggestion = (food_name, calories) => {
+  const handlePickSuggestion = (food_name: any, calories: any) => {
     setFormFields({ ...formFields, name: food_name, calories: calories });
   };
 
-  const handleSelect = (event) => {
+  const handleSelect = (event: { target: { name: any; value: any } }) => {
     const { name, value } = event.target;
     setFormFields({ ...formFields, [name]: value });
   };
@@ -161,12 +175,7 @@ function Journal() {
           </thead>
           <tbody>
             {foodEntries.map((val, index) => (
-              <Entry
-                key={val.id}
-                name={val.name}
-                timestamp={val.timestamp}
-                calories={val.calories}
-              />
+              <Entry key={val.id} entry={val} />
             ))}
           </tbody>
         </table>
@@ -210,9 +219,9 @@ function Journal() {
         handleSelect={handleSelect}
         handlePickSuggestion={handlePickSuggestion}
         modalTitle="Add new entry"
+        users={[]}
       ></ModalComponent>
       <InviteComponent
-        formFields={formFields}
         show={showInvite}
         handleClose={handleCloseInvite}
         modalTitle="Invite your friend"

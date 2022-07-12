@@ -1,6 +1,13 @@
-import { Button, Modal, Form } from "react-bootstrap";
-import { useState, useCallback } from "react";
-import { getSuggestions } from "../../utils/nutritionix/nutritionix.util";
+import { Button, Modal, Form, FormControlProps } from "react-bootstrap";
+import { useState, useCallback, ChangeEvent } from "react";
+import {
+  getSuggestions,
+  Suggestion,
+} from "../../utils/nutritionix/nutritionix.util";
+import { FormFields } from "../../routes/journal/journal.component";
+import { AdminFormFields } from "../../routes/admin/admin.component";
+import { UserData, UserDoc } from "../../contexts/user.context";
+import { FormControl } from "react-bootstrap";
 
 function debounce<Params extends any[]>(
   fn: (...args: Params) => any,
@@ -13,17 +20,23 @@ function debounce<Params extends any[]>(
   };
 }
 
+export function isTypeAdminFormFields(
+  formFields: AdminFormFields | FormFields
+): formFields is AdminFormFields {
+  return (formFields as AdminFormFields).userId !== undefined;
+}
+
 type ModalProps = {
   formFields: AdminFormFields | FormFields;
   show: boolean;
-  handleChange: () => void;
+  handleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   handleClose: () => void;
-  handleSubmit: 
-  handleSelect: 
-  handlePickSuggestion: 
-  isAdmin: 
-  users: 
-  modalTitle: 
+  handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  handleSelect: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  handlePickSuggestion: (foodName: string, calories: number) => void;
+  isAdmin: boolean;
+  users: UserDoc[];
+  modalTitle: string;
 };
 
 function ModalComponent({
@@ -37,21 +50,23 @@ function ModalComponent({
   isAdmin,
   users,
   modalTitle,
-}) {
+}: ModalProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [options, setOptions] = useState([]);
+  const [options, setOptions] = useState<Suggestion[]>([]);
 
-  const onKeyDown = (key) => {
-    if (key.keyCode === 13 || key.keyCode === 9) {
+  const onKeyDown = (key: React.KeyboardEvent<HTMLInputElement>) => {
+    if (key.key === "Enter" || key.key === "Tab") {
       setShowSuggestions(false);
     }
   };
 
-  const handleSearch = async (query) => {
+  const handleSearch = async (query: string) => {
     if (query && query.length > 0) {
       const res = await getSuggestions(query);
-      setShowSuggestions(true);
-      setOptions([...res.branded]);
+      if (res != null) {
+        setShowSuggestions(true);
+        setOptions([...res]);
+      }
     }
   };
 
@@ -63,12 +78,12 @@ function ModalComponent({
       onHide={handleClose}
       onClick={() => setShowSuggestions(false)}
     >
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={(event) => handleSubmit(event)}>
         <Modal.Header closeButton>
           <Modal.Title>{modalTitle}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {isAdmin && (
+          {isAdmin && isTypeAdminFormFields(formFields) && (
             <Form.Group className="mb-3" controlId="formUserSelect">
               <Form.Label>User</Form.Label>
               <Form.Select
@@ -88,15 +103,15 @@ function ModalComponent({
               </Form.Select>
             </Form.Group>
           )}
-          {isAdmin && (
+          {isAdmin && isTypeAdminFormFields(formFields) && (
             <Form.Group className="mb-3" controlId="formDatetime">
               <Form.Label>Date and time</Form.Label>
               <Form.Control
                 type="datetime-local"
-                onChange={handleChange}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange(e)}
                 name="timestamp"
                 placeholder="Enter Calorie Amount"
-                value={formFields.timestamp}
+                value={formFields.datePickerTimestamp}
               ></Form.Control>
             </Form.Group>
           )}
@@ -106,7 +121,7 @@ function ModalComponent({
               type="text"
               autoComplete="off"
               placeholder="Enter Food Name"
-              onChange={(event) => {
+              onChange={(event: ChangeEvent<HTMLInputElement>) => {
                 handleChange(event);
                 debouncedHandler(event.target.value);
               }}
@@ -160,7 +175,7 @@ function ModalComponent({
               type="number"
               min={1}
               max={5000}
-              onChange={handleChange}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange(e)}
               value={formFields.calories}
               name="calories"
               placeholder="Enter Calorie Amount"
@@ -171,7 +186,7 @@ function ModalComponent({
           <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
-          <Button type="submit" variant="primary" onClick={handleSubmit}>
+          <Button type="submit" variant="primary">
             Add
           </Button>
         </Modal.Footer>

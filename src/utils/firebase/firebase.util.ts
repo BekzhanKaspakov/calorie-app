@@ -28,9 +28,17 @@ import {
   orderBy,
   DocumentData,
 } from "firebase/firestore";
+import { idText } from "typescript";
 import { FoodEntry } from "../../components/entry/entry.component";
 import { InviteFriendFormFields } from "../../components/invite/invite.component";
-import { UserData } from "../../contexts/user.context";
+import { isTypeAdminFormFields } from "../../components/modal/modal.component";
+import { UserData, UserDoc } from "../../contexts/user.context";
+import {
+  AdminFoodEntry,
+  AdminFormFields,
+  isTypeAdminFoodEntry,
+} from "../../routes/admin/admin.component";
+import { FormFields } from "../../routes/journal/journal.component";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJBG3woL6CYaVPSLlN7a9gBQ8ytliZXiw",
@@ -48,11 +56,6 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: "select_account",
 });
-
-export type FormFieldFoodEntry = FoodEntry & {
-  datePickerTimestamp?: string;
-  userId?: string;
-};
 
 export const auth = getAuth();
 export const signInWithGooglePopup = () =>
@@ -119,7 +122,7 @@ export const getAllUsers = async () => {
 
   const qSnap = await getDocs(usersColRef);
 
-  return qSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return qSnap.docs.map((d) => ({ ...(d.data() as UserDoc), id: d.id }));
 };
 
 export const getAllFoodEntries = async () => {
@@ -137,21 +140,29 @@ export const getAllFoodEntries = async () => {
 
   return data;
 };
-export const getFoodEntries = async (userAuth: User) => {
+export const getFoodEntries = async (userAuth: User): Promise<FoodEntry[]> => {
   const subColRef = collection(db, "users", userAuth.uid, "foodEntries");
 
   const qSnap = await getDocs(query(subColRef, orderBy("timestamp", "desc")));
 
-  return qSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return qSnap.docs.map((d) => ({
+    id: d.id,
+    name: d.data().name,
+    timestamp: d.data().timestamp,
+    calories: d.data().calories,
+  }));
 };
 
 export const addFoodEntry = async (
   userAuth: User,
-  newEntry: FormFieldFoodEntry
-) => {
-  const uid = newEntry.userId != null ? newEntry.userId : userAuth.uid;
+  newEntry: AdminFormFields | FormFields
+): Promise<AdminFoodEntry | FoodEntry | null> => {
+  const uid =
+    isTypeAdminFormFields(newEntry) && newEntry.userId != null
+      ? newEntry.userId
+      : userAuth.uid;
   const timestamp =
-    newEntry.datePickerTimestamp != null
+    isTypeAdminFormFields(newEntry) && newEntry.datePickerTimestamp != null
       ? Timestamp.fromDate(new Date(newEntry.datePickerTimestamp))
       : serverTimestamp();
   const docRef = await addDoc(collection(db, "users", uid, "foodEntries"), {
@@ -161,17 +172,21 @@ export const addFoodEntry = async (
   });
 
   const docSnap = await getDoc(docRef);
+  const newEntryData = docSnap.data();
 
+  if (newEntryData == null) return null;
   return {
-    id: docSnap.id,
-    userId: docRef.parent!.parent!.id,
-    ...docSnap.data(),
+    id: newEntryData.id,
+    userId: newEntryData.userId,
+    name: newEntryData.name,
+    calories: newEntryData.calories,
+    timestamp: newEntryData.timestamp,
   };
 };
 
 export const editFoodEntry = async (
   oldUserId: string,
-  newEntryData: FormFieldFoodEntry
+  newEntryData: AdminFormFields
 ) => {
   if (newEntryData.id == null || newEntryData.userId == null) {
     console.log("EditFoodEntry: Missing id or userId");
@@ -207,7 +222,7 @@ export const editFoodEntry = async (
   };
 };
 
-export const deleteFoodEntry = async (entryData: FormFieldFoodEntry) => {
+export const deleteFoodEntry = async (entryData: AdminFormFields) => {
   if (entryData.id == null || entryData.userId == null) {
     console.log("DeleteFoodEntry: Missing id or userId");
     return;
@@ -224,7 +239,7 @@ export const getUserDoc = async (userAuth: UserData) => {
 
   const docSnap = await getDoc(docRef);
 
-  return docSnap.data();
+  return { id: docSnap.id, ...docSnap.data() };
 };
 
 export const inviteFriend = async (formFields: InviteFriendFormFields) => {

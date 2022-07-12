@@ -11,7 +11,7 @@ import { UserContext } from "./contexts/user.context";
 import { UserData } from "./contexts/user.context";
 
 function App() {
-  const { currentUser } = useContext(UserContext);
+  const { state } = useContext(UserContext);
   return (
     <div className="App">
       <Routes>
@@ -19,7 +19,7 @@ function App() {
           <Route
             path="journal"
             element={
-              <RequireAuth currentUser={currentUser}>
+              <RequireAuth currentUser={state}>
                 <Journal />
               </RequireAuth>
             }
@@ -27,7 +27,7 @@ function App() {
           <Route
             path="auth"
             element={
-              <NotRequireAuth currentUser={currentUser}>
+              <NotRequireAuth currentUser={state}>
                 <Authentication />
               </NotRequireAuth>
             }
@@ -35,7 +35,7 @@ function App() {
           <Route
             path="admin"
             element={
-              <RequireAdminAuth currentUser={currentUser}>
+              <RequireAdminAuth currentUser={state}>
                 <Admin />
               </RequireAdminAuth>
             }
@@ -43,7 +43,7 @@ function App() {
           <Route
             path="admin-report"
             element={
-              <RequireAdminAuth currentUser={currentUser}>
+              <RequireAdminAuth currentUser={state}>
                 <AdminReport />
               </RequireAdminAuth>
             }

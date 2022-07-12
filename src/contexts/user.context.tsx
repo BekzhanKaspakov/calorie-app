@@ -10,30 +10,33 @@ import {
 } from "../utils/firebase/firebase.util";
 
 export const UserContext = createContext({
-  setCurrentUser: () => null,
-  currentUser: {
-    ...JSON.parse(localStorage.getItem("user") || ""),
-  },
+  setState: (newState: UserData) => {},
+  state: {
+    ...JSON.parse(localStorage.getItem("user") || "{}"),
+  } as UserData,
 });
 
-export type UserData = User & {
+export type UserDoc = {
   createdAt: string;
   dailyCalorieLimit: 2100;
   displayName: string;
   email: string;
   role?: string;
+  id: string;
 };
+
+export type UserData = User & UserDoc;
 
 type UserProviderProps = {
   children: React.ReactNode;
 };
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const [currentUser, setCurrentUser] = usePersistStateHook("user", {
-    ...JSON.parse(localStorage.getItem("user") || ""),
+  const { state, setState } = usePersistStateHook("user", {
+    ...JSON.parse(localStorage.getItem("user") || "{}"),
   });
 
-  const value = { currentUser, setCurrentUser };
+  const value = { state, setState };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChangedListener(async (user: UserData) => {
@@ -49,9 +52,9 @@ export const UserProvider = ({ children }: UserProviderProps) => {
           };
         }
       }
-      setCurrentUser({
+      setState({
         ...userData,
-      });
+      } as UserData);
     });
     return unsubscribe;
   }, []);

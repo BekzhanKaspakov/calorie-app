@@ -1,29 +1,29 @@
 import { Timestamp } from "firebase/firestore";
 import { Button } from "react-bootstrap";
 import { UserData } from "../../contexts/user.context";
+import { AdminFoodEntry } from "../../routes/admin/admin.component";
 
 export type FoodEntry = {
   id: string;
   name: string;
   timestamp: Timestamp;
-  calories: string;
+  calories: number;
 };
 
 type EntryProps = {
   entry: FoodEntry;
-  userDisplayName: string;
-  userId: string;
-  handleDelete: (
+  userDisplayName?: string;
+  userId?: string;
+  handleDelete?: (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-    entryData: { userId: string; foodId: string }
-  ) => void;
-  showEdit: (id: string) => void;
+    entryData: FoodEntry
+  ) => Promise<void>;
+  showEdit?: (id: string) => void;
 };
 
 const Entry = ({
   entry,
   userDisplayName,
-  userId,
   handleDelete,
   showEdit,
 }: EntryProps) => {
@@ -35,16 +35,14 @@ const Entry = ({
       <td>{name}</td>
       <td>{date.toLocaleString()}</td>
       <td>{calories}</td>
-      {userDisplayName != null && (
+      {userDisplayName != null && showEdit && handleDelete && (
         <td>
           <Button variant="primary" onClick={() => showEdit(id)}>
             Edit
           </Button>
           <Button
             variant="danger"
-            onClick={(event) =>
-              handleDelete(event, { userId: userId, foodId: id })
-            }
+            onClick={(event) => handleDelete(event, entry)}
           >
             Delete
           </Button>
