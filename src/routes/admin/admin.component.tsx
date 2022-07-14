@@ -1,7 +1,13 @@
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import React, {
+  useState,
+  useEffect,
+  ChangeEvent,
+  FormEvent,
+  useRef,
+} from "react";
 import {
   getAllFoodEntries,
-  getAllUsers,
+  getUsers,
   addFoodEntry,
   editFoodEntry,
   deleteFoodEntry,
@@ -10,7 +16,6 @@ import Entry, { FoodEntry } from "../../components/entry/entry.component";
 import ModalComponent from "../../components/modal/modal.component";
 import { Button } from "react-bootstrap";
 import { UserData, UserDoc } from "../../contexts/user.context";
-import { Timestamp } from "firebase/firestore";
 import { FormFields } from "../journal/journal.component";
 
 export type AdminFoodEntry = FoodEntry & {
@@ -43,26 +48,43 @@ function Admin() {
   const [oldUserId, setOldUserId] = useState("");
   const [foodEntries, setEntries] = useState<AdminFoodEntry[]>([]);
   const [users, setUsers] = useState<UserDoc[]>([]);
-  // const { currentUser } = useContext(UserContext);
+  const [lastDocument, setLastDocument] = useState<FoodEntry>();
   const [currentUser, setCurrentUser] = useState<UserData>({
     ...JSON.parse(localStorage.getItem("user") || "{}"),
   });
   const [show, setShow] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const listInnerRef = useRef<HTMLDivElement | null>(null);
+
+  const onScroll = () => {
+    if (listInnerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
+      if (scrollTop + clientHeight === scrollHeight) {
+        console.log("reached bottom");
+        fetchData();
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await getAllFoodEntries();
-        const users: UserDoc[] = await getAllUsers();
-        setEntries(response);
-        setUsers(users);
-      } catch (err) {
-        console.error(err);
-      }
-    };
     fetchData();
   }, []);
+
+  const fetchData = async () => {
+    try {
+      console.log(lastDocument);
+      const response = await getAllFoodEntries(lastDocument);
+      const usersToGet = response.map((val, index) => {
+        return val.userId;
+      });
+      const userDocs: UserDoc[] = await getUsers(usersToGet);
+      setLastDocument(response[response.length - 1]);
+      setEntries([...foodEntries, ...response]);
+      setUsers([...users, ...userDocs]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleClose = () => {
     setShow(false);
@@ -209,32 +231,45 @@ function Admin() {
           Add New Food Entry
         </Button>
       </div>
-
-      <table className="table">
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Food/Product Name</th>
-            <th>Date time</th>
-            <th>Calorie value</th>
-            <th style={{ width: "150px" }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {foodEntries.map((val, index) => (
-            <Entry
-              key={val.id}
-              entry={val}
-              showEdit={handleShowEdit}
-              handleDelete={handleDelete}
-              userDisplayName={
-                users.find((user, index) => user.id === val.userId)
-                  ?.displayName || ""
-              }
-            />
-          ))}
-        </tbody>
-      </table>
+      <div
+        onScroll={onScroll}
+        ref={listInnerRef}
+        style={{ height: "500px", overflowY: "auto" }}
+      >
+        <table className="table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Food/Product Name</th>
+              <th>Date time</th>
+              <th>Calorie value</th>
+              <th style={{ width: "150px" }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* {foodEntriesHtml} */}
+            {foodEntries.map((val, index) => (
+              <Entry
+                key={val.id}
+                entry={val}
+                showEdit={handleShowEdit}
+                handleDelete={handleDelete}
+                userDisplayName={
+                  users.find((user, index) => user.id === val.userId)
+                    ?.displayName || ""
+                }
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button
+        onClick={(e) => {
+          fetchData();
+        }}
+      >
+        Load More
+      </button>
       <ModalComponent
         formFields={formFields}
         show={show}

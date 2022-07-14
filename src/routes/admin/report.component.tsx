@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { UserDoc } from "../../contexts/user.context";
-import {
-  getAllFoodEntries,
-  getAllUsers,
-} from "../../utils/firebase/firebase.util";
+import { getAllFoodEntries } from "../../utils/firebase/firebase.util";
 import { AdminFoodEntry } from "./admin.component";
 
 function AdminReport() {
@@ -13,10 +10,10 @@ function AdminReport() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await getAllFoodEntries();
-        const users = await getAllUsers();
-        setEntries(response);
-        setUsers(users);
+        // const response = await getAllFoodEntries();
+        // const users = await getAllUsers();
+        // setEntries(response);
+        // setUsers(users);
       } catch (err) {
         console.error(err);
       }

@@ -8,9 +8,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  Auth,
   User,
-  NextOrObserver,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -21,12 +19,15 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
-  collectionGroup,
   query,
   Timestamp,
   deleteDoc,
   orderBy,
   DocumentData,
+  startAfter,
+  limit,
+  where,
+  documentId,
 } from "firebase/firestore";
 import { idText } from "typescript";
 import { FoodEntry } from "../../components/entry/entry.component";
@@ -117,25 +118,31 @@ export const signOutUser = async () => await signOut(auth);
 export const onAuthStateChangedListener = (callback: any) =>
   onAuthStateChanged(auth, callback);
 
-export const getAllUsers = async () => {
+export const getUsers = async (userIds: string[]) => {
   const usersColRef = collection(db, "users");
-
-  const qSnap = await getDocs(usersColRef);
+  const qSnap = await getDocs(
+    query(usersColRef, where(documentId(), "in", userIds))
+  );
 
   return qSnap.docs.map((d) => ({ ...(d.data() as UserDoc), id: d.id }));
 };
 
-export const getAllFoodEntries = async () => {
-  const foodEntries = query(
-    collectionGroup(db, "foodEntries"),
-    orderBy("timestamp", "desc")
-  );
-  const querySnapshot = await getDocs(foodEntries);
+export const getAllFoodEntries = async (lastDocument?: FoodEntry) => {
+  const queryConstraints = [orderBy("timestamp", "desc")];
+  console.log(lastDocument);
+  if (lastDocument !== undefined) {
+    queryConstraints.push(startAfter(lastDocument.timestamp)); // fetch data following the last document accessed
+  }
+  queryConstraints.push(limit(10));
+  console.log(queryConstraints);
+
+  const q = query(collection(db, "foodEntries"), ...queryConstraints);
+
+  const querySnapshot = await getDocs(q);
 
   const data = querySnapshot.docs.map((d: DocumentData) => ({
     id: d.id,
     ...d.data(),
-    userId: d.ref.parent.parent.id,
   }));
 
   return data;
