@@ -4,10 +4,7 @@ import { useNavigate } from "react-router-dom";
 import FormInput from "../form-input/form-input.component";
 import { Button } from "react-bootstrap";
 
-import {
-  createAuthUserWithEmailAndPassword,
-  createUserDocumentFromAuth,
-} from "../../utils/firebase/firebase.util";
+import { createAuthUserWithEmailAndPassword } from "../../utils/firebase/firebase.util";
 
 import "./sign-up-form.styles.scss";
 

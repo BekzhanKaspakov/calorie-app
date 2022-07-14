@@ -49,7 +49,7 @@ function Admin() {
   const [foodEntries, setEntries] = useState<AdminFoodEntry[]>([]);
   const [users, setUsers] = useState<UserDoc[]>([]);
   const [lastDocument, setLastDocument] = useState<FoodEntry>();
-  const [currentUser, setCurrentUser] = useState<UserData>({
+  const [currentUser] = useState<UserData>({
     ...JSON.parse(localStorage.getItem("user") || "{}"),
   });
   const [show, setShow] = useState(false);
@@ -66,10 +66,6 @@ function Admin() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       console.log(lastDocument);
@@ -85,6 +81,11 @@ function Admin() {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleClose = () => {
     setShow(false);

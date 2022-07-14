@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getFoodEntries,
   addFoodEntry,
@@ -71,24 +71,40 @@ function Journal() {
   const [formFields, setFormFields] = useState(defaultFormFields);
   const [foodEntries, setEntries] = useState<FoodEntry[]>([]);
   const [dates, setDates] = useState<DailyCalories[]>([]);
-  const [currentUser, setCurrentUser] = useState<UserData>({
+  const [currentUser] = useState<UserData>({
     ...JSON.parse(localStorage.getItem("user") || "{}"),
   });
   const [showInvite, setShowInvite] = useState(false);
   const [show, setShow] = useState(false);
+  const listInnerRef = useRef<HTMLDivElement | null>(null);
+  const [lastDocument, setLastDocument] = useState<FoodEntry>();
+
+  const fetchData = async () => {
+    try {
+      const response = await getFoodEntries(currentUser, lastDocument);
+      if (response.length > 0) {
+        setLastDocument(response[response.length - 1]);
+      }
+      setEntries([...foodEntries, ...response]);
+      setDates(makeDates([...foodEntries, ...response]));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const onScroll = () => {
+    if (listInnerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
+      if (scrollTop + clientHeight === scrollHeight) {
+        console.log("reached bottom");
+        fetchData();
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await getFoodEntries(currentUser);
-
-        setDates(makeDates(response));
-        setEntries(response);
-      } catch (err) {
-        console.error(err);
-      }
-    };
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleClose = () => {
@@ -165,20 +181,26 @@ function Journal() {
           </Button>
         </div>
 
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Food/Product Name</th>
-              <th>Date time</th>
-              <th>Calorie value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {foodEntries.map((val, index) => (
-              <Entry key={val.id} entry={val} />
-            ))}
-          </tbody>
-        </table>
+        <div
+          onScroll={onScroll}
+          ref={listInnerRef}
+          style={{ height: "300px", overflowY: "auto" }}
+        >
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Food/Product Name</th>
+                <th>Date time</th>
+                <th>Calorie value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {foodEntries.map((val, index) => (
+                <Entry key={val.id} entry={val} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       <div style={{ margin: "2rem 0" }}>
         <table className="table">

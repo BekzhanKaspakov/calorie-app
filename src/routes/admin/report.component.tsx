@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { UserDoc } from "../../contexts/user.context";
-import { getAllFoodEntries } from "../../utils/firebase/firebase.util";
 import { AdminFoodEntry } from "./admin.component";
 
 function AdminReport() {
-  const [foodEntries, setEntries] = useState<AdminFoodEntry[]>([]);
-  const [users, setUsers] = useState<UserDoc[]>([]);
+  const [foodEntries] = useState<AdminFoodEntry[]>([]);
+  const [users] = useState<UserDoc[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {

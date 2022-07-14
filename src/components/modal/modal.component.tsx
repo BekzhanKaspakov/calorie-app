@@ -1,4 +1,4 @@
-import { Button, Modal, Form, FormControlProps } from "react-bootstrap";
+import { Button, Modal, Form } from "react-bootstrap";
 import { useState, useCallback, ChangeEvent } from "react";
 import {
   getSuggestions,
@@ -6,8 +6,7 @@ import {
 } from "../../utils/nutritionix/nutritionix.util";
 import { FormFields } from "../../routes/journal/journal.component";
 import { AdminFormFields } from "../../routes/admin/admin.component";
-import { UserData, UserDoc } from "../../contexts/user.context";
-import { FormControl } from "react-bootstrap";
+import { UserDoc } from "../../contexts/user.context";
 
 function debounce<Params extends any[]>(
   fn: (...args: Params) => any,
@@ -70,6 +69,7 @@ function ModalComponent({
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedHandler = useCallback(debounce(handleSearch, 200), []);
 
   return (

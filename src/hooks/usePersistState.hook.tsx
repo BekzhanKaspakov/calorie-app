@@ -11,6 +11,7 @@ const usePersistState = (storageKey: string, initialState: UserData) => {
     if (storageInBrowser) {
       setInternalState(storageInBrowser);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setState = (newState: UserData) => {

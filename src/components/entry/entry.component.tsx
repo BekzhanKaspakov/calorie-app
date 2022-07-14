@@ -1,7 +1,5 @@
 import { Timestamp } from "firebase/firestore";
 import { Button } from "react-bootstrap";
-import { UserData } from "../../contexts/user.context";
-import { AdminFoodEntry } from "../../routes/admin/admin.component";
 
 export type FoodEntry = {
   id: string;

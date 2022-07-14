@@ -50,5 +50,8 @@
   },
   "devDependencies": {
     "@types/store": "^2.0.2"
+  },
+  "overrides": {
+    "autoprefixer": "10.4.5"
   }
 }

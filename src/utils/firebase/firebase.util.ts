@@ -29,7 +29,6 @@ import {
   where,
   documentId,
 } from "firebase/firestore";
-import { idText } from "typescript";
 import { FoodEntry } from "../../components/entry/entry.component";
 import { InviteFriendFormFields } from "../../components/invite/invite.component";
 import { isTypeAdminFormFields } from "../../components/modal/modal.component";
@@ -37,7 +36,6 @@ import { UserData, UserDoc } from "../../contexts/user.context";
 import {
   AdminFoodEntry,
   AdminFormFields,
-  isTypeAdminFoodEntry,
 } from "../../routes/admin/admin.component";
 import { FormFields } from "../../routes/journal/journal.component";
 
@@ -50,7 +48,7 @@ const firebaseConfig = {
   appId: "1:434449718238:web:b943cab63b25394f119b4f",
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
+initializeApp(firebaseConfig);
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -133,7 +131,6 @@ export const getAllFoodEntries = async (lastDocument?: FoodEntry) => {
   if (lastDocument !== undefined) {
     queryConstraints.push(startAfter(lastDocument.timestamp)); // fetch data following the last document accessed
   }
-  queryConstraints.push(limit(10));
   console.log(queryConstraints);
 
   const q = query(collection(db, "foodEntries"), ...queryConstraints);
@@ -147,10 +144,23 @@ export const getAllFoodEntries = async (lastDocument?: FoodEntry) => {
 
   return data;
 };
-export const getFoodEntries = async (userAuth: User): Promise<FoodEntry[]> => {
-  const subColRef = collection(db, "users", userAuth.uid, "foodEntries");
 
-  const qSnap = await getDocs(query(subColRef, orderBy("timestamp", "desc")));
+export const getFoodEntries = async (
+  userAuth: User,
+  lastDocument?: FoodEntry
+): Promise<FoodEntry[]> => {
+  const queryConstraints = [
+    where("userId", "==", userAuth.uid),
+    orderBy("timestamp", "desc"),
+  ];
+  if (lastDocument !== undefined) {
+    queryConstraints.push(startAfter(lastDocument.timestamp)); // fetch data following the last document accessed
+  }
+  console.log(queryConstraints);
+  queryConstraints.push(limit(10));
+  const subColRef = collection(db, "foodEntries");
+
+  const qSnap = await getDocs(query(subColRef, ...queryConstraints));
 
   return qSnap.docs.map((d) => ({
     id: d.id,

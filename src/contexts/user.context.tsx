@@ -1,6 +1,6 @@
 import { User } from "firebase/auth";
 import { DocumentData } from "firebase/firestore";
-import { createContext, useState, useEffect } from "react";
+import { createContext, useEffect } from "react";
 import usePersistStateHook from "../hooks/usePersistState.hook";
 
 import {
@@ -57,6 +57,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       } as UserData);
     });
     return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
