@@ -35,13 +35,13 @@ function AdminReport() {
     if (listInnerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
       if (!endReached && scrollTop + clientHeight === scrollHeight) {
-        console.log("reached bottom");
         fetchData();
       }
     }
   };
 
   useEffect(() => {
+    console.log("triggered");
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -96,7 +96,6 @@ function Journal() {
     if (listInnerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
       if (scrollTop + clientHeight === scrollHeight) {
-        console.log("reached bottom");
         fetchData();
       }
     }

@@ -60,7 +60,6 @@ function Admin() {
     if (listInnerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
       if (scrollTop + clientHeight === scrollHeight) {
-        console.log("reached bottom");
         fetchData();
       }
     }
@@ -68,7 +67,6 @@ function Admin() {
 
   const fetchData = async () => {
     try {
-      console.log(lastDocument);
       const response = await getAllFoodEntries(lastDocument);
       const usersToGet = response.map((val, index) => {
         return val.userId;

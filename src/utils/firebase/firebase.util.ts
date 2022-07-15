@@ -127,11 +127,9 @@ export const getUsers = async (userIds: string[]) => {
 
 export const getLastUsers = async (lastUser?: UserDoc) => {
   const queryConstraints = [orderBy("displayName", "asc")];
-  console.log(lastUser);
   if (lastUser !== undefined) {
     queryConstraints.push(startAfter(lastUser.displayName)); // fetch data following the last document accessed
   }
-  console.log(queryConstraints);
   queryConstraints.push(limit(3));
 
   const q = query(collection(db, "users"), ...queryConstraints);
@@ -143,11 +141,9 @@ export const getLastUsers = async (lastUser?: UserDoc) => {
 
 export const getAllFoodEntries = async (lastDocument?: FoodEntry) => {
   const queryConstraints = [orderBy("timestamp", "desc")];
-  console.log(lastDocument);
   if (lastDocument !== undefined) {
     queryConstraints.push(startAfter(lastDocument.timestamp)); // fetch data following the last document accessed
   }
-  console.log(queryConstraints);
 
   const q = query(collection(db, "foodEntries"), ...queryConstraints);
 
@@ -182,6 +178,7 @@ export const getFoodEntries = async (
   userAuth: User,
   lastDocument?: FoodEntry
 ): Promise<FoodEntry[]> => {
+  console.log("getFoodEntries triggered");
   const queryConstraints = [
     where("userId", "==", userAuth.uid),
     orderBy("timestamp", "desc"),
@@ -189,7 +186,6 @@ export const getFoodEntries = async (
   if (lastDocument !== undefined) {
     queryConstraints.push(startAfter(lastDocument.timestamp)); // fetch data following the last document accessed
   }
-  console.log(queryConstraints);
   queryConstraints.push(limit(10));
   const subColRef = collection(db, "foodEntries");
 
