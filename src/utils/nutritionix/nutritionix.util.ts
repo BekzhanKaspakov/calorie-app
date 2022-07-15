@@ -15,7 +15,7 @@ export type Suggestion = {
 };
 
 type PostSuggestionsResponse = {
-  data: { branded: Suggestion[] };
+  branded: Suggestion[];
 };
 
 export const getSuggestions = async (reqString: string) => {
@@ -29,5 +29,6 @@ export const getSuggestions = async (reqString: string) => {
   } catch (error: any) {
     console.log(error);
   }
-  return resp?.data.data.branded;
+  console.log(resp);
+  return resp?.data.branded;
 };

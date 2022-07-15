@@ -12,6 +12,7 @@ import { UserData } from "./contexts/user.context";
 
 function App() {
   const { state } = useContext(UserContext);
+  console.log("ass");
   return (
     <div className="App">
       <Routes>

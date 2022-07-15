@@ -1,7 +1,7 @@
 import { User } from "firebase/auth";
+import browserStorage from "store";
 import { DocumentData } from "firebase/firestore";
-import { createContext, useEffect } from "react";
-import usePersistStateHook from "../hooks/usePersistState.hook";
+import { createContext, useEffect, useState } from "react";
 
 import {
   onAuthStateChangedListener,
@@ -32,7 +32,7 @@ type UserProviderProps = {
 };
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const { state, setState } = usePersistStateHook("user", {
+  const [state, setState] = useState({
     ...JSON.parse(localStorage.getItem("user") || "{}"),
   });
 
@@ -59,6 +59,12 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (state != null && Object.keys(state).length > 0) {
+      browserStorage.set("user", state);
+    }
+  }, [state]);
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };

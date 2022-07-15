@@ -2,6 +2,7 @@ import { Timestamp } from "firebase/firestore";
 import { Button } from "react-bootstrap";
 
 export type FoodEntry = {
+  userId: string;
   id: string;
   name: string;
   timestamp: Timestamp;

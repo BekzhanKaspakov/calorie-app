@@ -125,6 +125,22 @@ export const getUsers = async (userIds: string[]) => {
   return qSnap.docs.map((d) => ({ ...(d.data() as UserDoc), id: d.id }));
 };
 
+export const getLastUsers = async (lastUser?: UserDoc) => {
+  const queryConstraints = [orderBy("displayName", "asc")];
+  console.log(lastUser);
+  if (lastUser !== undefined) {
+    queryConstraints.push(startAfter(lastUser.displayName)); // fetch data following the last document accessed
+  }
+  console.log(queryConstraints);
+  queryConstraints.push(limit(3));
+
+  const q = query(collection(db, "users"), ...queryConstraints);
+
+  const qSnap = await getDocs(q);
+
+  return qSnap.docs.map((d) => ({ ...(d.data() as UserDoc), id: d.id }));
+};
+
 export const getAllFoodEntries = async (lastDocument?: FoodEntry) => {
   const queryConstraints = [orderBy("timestamp", "desc")];
   console.log(lastDocument);
@@ -143,6 +159,23 @@ export const getAllFoodEntries = async (lastDocument?: FoodEntry) => {
   }));
 
   return data;
+};
+
+export const getUsersFoodEntries = async (
+  users: string[]
+): Promise<FoodEntry[]> => {
+  const queryConstraints = [where("userId", "in", users)];
+  const subColRef = collection(db, "foodEntries");
+
+  const qSnap = await getDocs(query(subColRef, ...queryConstraints));
+
+  return qSnap.docs.map((d) => ({
+    id: d.id,
+    name: d.data().name,
+    timestamp: d.data().timestamp,
+    calories: d.data().calories,
+    userId: d.data().userId,
+  }));
 };
 
 export const getFoodEntries = async (
@@ -167,6 +200,7 @@ export const getFoodEntries = async (
     name: d.data().name,
     timestamp: d.data().timestamp,
     calories: d.data().calories,
+    userId: d.data().userId,
   }));
 };
 
@@ -182,7 +216,8 @@ export const addFoodEntry = async (
     isTypeAdminFormFields(newEntry) && newEntry.datePickerTimestamp != null
       ? Timestamp.fromDate(new Date(newEntry.datePickerTimestamp))
       : serverTimestamp();
-  const docRef = await addDoc(collection(db, "users", uid, "foodEntries"), {
+  const docRef = await addDoc(collection(db, "foodEntries"), {
+    userId: uid,
     name: newEntry.name,
     calories: newEntry.calories,
     timestamp: timestamp,
@@ -193,7 +228,7 @@ export const addFoodEntry = async (
 
   if (newEntryData == null) return null;
   return {
-    id: newEntryData.id,
+    id: docSnap.id,
     userId: newEntryData.userId,
     name: newEntryData.name,
     calories: newEntryData.calories,
