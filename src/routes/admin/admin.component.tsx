@@ -17,6 +17,8 @@ import ModalComponent from "../../components/modal/modal.component";
 import { Button } from "react-bootstrap";
 import { UserData, UserDoc } from "../../contexts/user.context";
 import { FormFields } from "../journal/journal.component";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../store/user/user.selector";
 
 export type AdminFoodEntry = FoodEntry & {
   userId: string;
@@ -49,9 +51,10 @@ function Admin() {
   const [foodEntries, setEntries] = useState<AdminFoodEntry[]>([]);
   const [users, setUsers] = useState<UserDoc[]>([]);
   const [lastDocument, setLastDocument] = useState<FoodEntry>();
-  const [currentUser] = useState<UserData>({
-    ...JSON.parse(localStorage.getItem("user") || "{}"),
-  });
+  // const [currentUser] = useState<UserData>({
+  // ...JSON.parse(localStorage.getItem("user") || "{}"),
+  // });
+  const currentUser = useSelector(selectCurrentUser);
   const [show, setShow] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const listInnerRef = useRef<HTMLDivElement | null>(null);

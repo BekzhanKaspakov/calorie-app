@@ -9,6 +9,8 @@ import Entry, { FoodEntry } from "../../components/entry/entry.component";
 import InviteComponent from "../../components/invite/invite.component";
 import { Timestamp } from "firebase/firestore";
 import { UserData } from "../../contexts/user.context";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../store/user/user.selector";
 
 export type FormFields = {
   name: string;
@@ -71,9 +73,10 @@ function Journal() {
   const [formFields, setFormFields] = useState(defaultFormFields);
   const [foodEntries, setEntries] = useState<FoodEntry[]>([]);
   const [dates, setDates] = useState<DailyCalories[]>([]);
-  const [currentUser] = useState<UserData>({
-    ...JSON.parse(localStorage.getItem("user") || "{}"),
-  });
+  // const [currentUser] = useState<UserData>({
+  // ...JSON.parse(localStorage.getItem("user") || "{}"),
+  // });
+  const currentUser = useSelector(selectCurrentUser);
   const [showInvite, setShowInvite] = useState(false);
   const [show, setShow] = useState(false);
   const listInnerRef = useRef<HTMLDivElement | null>(null);

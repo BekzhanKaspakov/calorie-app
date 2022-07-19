@@ -1,13 +1,14 @@
 import { Fragment, useContext } from "react";
 import { Outlet } from "react-router-dom";
 
-import { UserContext } from "../../contexts/user.context";
-
 import { signOutUser } from "../../utils/firebase/firebase.util";
 import { Navbar, Container, Nav } from "react-bootstrap";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../store/user/user.selector";
 
 const Navigation = () => {
-  const { state } = useContext(UserContext);
+  // const { state } = useContext(UserContext);
+  const currentUser = useSelector(selectCurrentUser);
 
   return (
     <Fragment>
@@ -18,7 +19,7 @@ const Navigation = () => {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
               <Nav.Link href="/journal">Caloric Journal</Nav.Link>
-              {!(state && Object.keys(state).length === 0) ? (
+              {!(currentUser && Object.keys(currentUser).length === 0) ? (
                 <Nav.Link
                   onClick={async () => {
                     localStorage.removeItem("user");
@@ -31,7 +32,7 @@ const Navigation = () => {
               ) : (
                 <Nav.Link href="/auth">SIGN IN</Nav.Link>
               )}
-              {state && state.role === "admin" && (
+              {currentUser && currentUser.role === "admin" && (
                 <>
                   <Nav.Link href="/admin">Admin Page</Nav.Link>
                   <Nav.Link href="/admin-report">Admin Report</Nav.Link>
