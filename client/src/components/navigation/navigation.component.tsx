@@ -1,4 +1,4 @@
-import { Fragment, useContext } from "react";
+import { Fragment } from "react";
 import { Outlet } from "react-router-dom";
 
 import { signOutUser } from "../../utils/firebase/firebase.util";
@@ -7,7 +7,6 @@ import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../store/user/user.selector";
 
 const Navigation = () => {
-  // const { state } = useContext(UserContext);
   const currentUser = useSelector(selectCurrentUser);
 
   return (

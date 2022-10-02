@@ -15,7 +15,7 @@ import {
 import Entry, { FoodEntry } from "../../components/entry/entry.component";
 import ModalComponent from "../../components/modal/modal.component";
 import { Button } from "react-bootstrap";
-import { UserData, UserDoc } from "../../contexts/user.context";
+import { UserDoc } from "../../contexts/user.context";
 import { FormFields } from "../journal/journal.component";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../store/user/user.selector";

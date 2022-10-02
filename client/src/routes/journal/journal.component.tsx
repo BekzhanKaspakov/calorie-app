@@ -8,7 +8,6 @@ import ModalComponent from "../../components/modal/modal.component";
 import Entry, { FoodEntry } from "../../components/entry/entry.component";
 import InviteComponent from "../../components/invite/invite.component";
 import { Timestamp } from "firebase/firestore";
-import { UserData } from "../../contexts/user.context";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../store/user/user.selector";
 

@@ -27,7 +27,6 @@ import {
   startAfter,
   limit,
   where,
-  documentId,
 } from "firebase/firestore";
 import { FoodEntry } from "../../components/entry/entry.component";
 import { InviteFriendFormFields } from "../../components/invite/invite.component";
